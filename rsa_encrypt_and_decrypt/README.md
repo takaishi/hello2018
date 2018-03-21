@@ -12,8 +12,23 @@ openssl rsa -pubout < private_key.pem > public_key.pem
 Base64形式にエンコードし、標準出力に出力する
 
 ```
-⟩ echo "hello, world!" | go run ./encrypt/encrypt_with_rsa_publickey.go ./public_key.pem
-MIVSK2ahCa59p/2SEy2PQBQdop6o0ElMh0hq5xspsb+9ZsHvRtL1c/2lb1xP7bep8nJMJG5cBILiGl6zbjd4lBB3noLn4UDlO+ASMMSnihZzYNw9Dka6Le/xLEaEofu9QXybxBO5Si+VwSx/UsZGOHY1sB4ZFmWNx3iNtir0ONQ=⏎
+⟩ echo "hello, world!" | go run ./encrypt/encrypt_with_rsa_publickey.go ./public_key.pem > encrypted.txt
+```
+
+```
+⟩ cat encrypted.txt
+Tf8O5oFcKDlg72EW1oP2KiEHFDhcgf9IbZ3IgiohYtDDG3M4lyEMPFTlzXBagvb80O+paqyZmGdqw/vd5QtySvn1fZTUOZaGRtCu4oPzz7Gqc86bIDXln5l7Ir50+6UZvagkE4+oRXwI2ybBrzN/5OEEf0gH1XIe/CQSgHfmkWc=⏎
+```
+
+## 複合
+
+Base64形式の文字列を標準入力で渡すと、複合して標準出力に出力する
+
+```
+⟩ cat encrypted.txt | go run decrypt/decrypt_with_rsa_privatekey.go ./private_key.pem
+hello, world!⏎
+```
+
 ```
 
 ## 参考文献
