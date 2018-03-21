@@ -12,7 +12,6 @@ import (
 	"log"
 	"math/big"
 	"os"
-	"strconv"
 )
 
 func main() {
@@ -36,19 +35,12 @@ func main() {
 		parts = append(parts, data)
 	}
 
-	e_val_str := ""
-	for _, x := range parts[1] {
-		e_val_str = e_val_str + fmt.Sprintf("%02x", byte(x))
-
-	}
-	e_val, err := strconv.ParseInt(e_val_str, 16, 64)
-	if err != nil {
-		log.Fatal(err)
-	}
+	n_val := new(big.Int).SetBytes(parts[2])
+	e_val := int(new(big.Int).SetBytes(parts[1]).Int64())
 
 	pubKey := &rsa.PublicKey{
-		N: new(big.Int).SetBytes(parts[2]),
-		E: int(e_val),
+		N: n_val,
+		E: e_val,
 	}
 
 	stdin := bufio.NewScanner(os.Stdin)
