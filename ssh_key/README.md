@@ -1,71 +1,13 @@
+# ssh-keygenで生成した公開鍵を扱う
 
-
-```
-⟩ ssh-keygen
-Generating public/private rsa key pair.
-Enter file in which to save the key (/Users/r_takaishi/.ssh/id_rsa): ./test_rsa
-Enter passphrase (empty for no passphrase):
-Enter same passphrase again:
-Your identification has been saved in ./test_rsa.
-Your public key has been saved in ./test_rsa.pub.
-The key fingerprint is:
-SHA256:O14buTjMvedxu8y4tGybrA2QGc0B8GJq4W4exmCfIVI r_takaishi@takaishiryou-no-iMac.local
-The key's randomart image is:
-+---[RSA 2048]----+
-|      .....      |
-|       . o .     |
-|  E . o o o      |
-| . . + . +       |
-|. + =   S        |
-| o B o   o .     |
-|    O  oo.= o .  |
-|   + . .++.XoO . |
-|    .   o.=*@o=. |
-+----[SHA256]-----+
-
-~/src/github.com/takaishi/hello2018/ssh_key · (rsa_encrypt_and_decrypt±)
-⟩ ls -l test_rsa*
--rw-------  1 r_takaishi  staff  1679  3 21 10:32 test_rsa
--rw-r--r--  1 r_takaishi  staff   419  3 21 10:32 test_rsa.pub
-```
-
-
-```
-⟩ cat test_rsa
------BEGIN RSA PRIVATE KEY-----
-MIIEpAIBAAKCAQEA8g7SjDm5MvvCK/ML7k+x6NhAcnKidcUSBwsbf/8Iv+eW7M8u
-MjAnKhctiW/qObpkIw+bqAIRF3nncm14pr3/NZV3LMtYkU7qPN1HY3+HjRxe/v6D
-aTBITcznATqIHzpJkpU8QZOMJMNbI2zrH5b9ggtB7S7u3PamQgU0RoD2AQHfFTCc
-Ij5nupJn47DpCOyRMTAFRfMkDD8EW3MyZvHsd5W20meinXf5b7XpVRUpDhi+/N5s
-RKyXl5YCjJLX0UNwKDFVhvnCxqiYAh1362xXI6LFuB+phxoJEBT/yZGPAqs5dyBL
-/mOAE+ELyk1iFkIqqll5xV9gP6wmln9HqlOlSwIDAQABAoIBAE9n02QSz5FNC36V
-ZZWQ6UEEJ+gjeO3/bxGGcEgF5t3lYBphQLtQFpj1L4gFgaXcYlsqFJsByo+T+vwL
-s2enrl/qn0S/lFdetvKueGvIezQsWXF3Fq7cGuwCyskZZWwxF8+RS0oL2A57U5uE
-cIFVa+ZMQR1Ipy0vcIz53hM+3PSpAC24Hi6jnESaTCmZBoQWSKv8ZrM1BoDaCz12
-bsBAfixWn+jIMxD+VlQJEZb+kIwIXSiYu4ZPToqYQYEHrNHpSLi6s8T9j9uTPzFk
-fNa6zaxmaDRTK9ZLGeOeOXkcHCYppUc10CML0lwogMUAYxYkel1jb8z+i4t+reMF
-mOeHvVkCgYEA+Y5DehLzbucRY/1HoTdUQTEc4C8WG+d5+njLnL1Mc49Qgf0hsb1M
-Whc9/2BW1hxMZ+tMP4J+ffoFEpX9f6+zXH+eBZxOxLGRTCC5GeFvAevvERcZyjL/
-SKqxdehPDQT0G+MNuSVZfom3f8bfR1jU2VY/drW9tgjXhBeVRYq6ALcCgYEA+E7+
-O8JTNo1ivLfTpi9ABWJuHDkNnjQr6BwNhb7+YXms9CiQqZhKr3O4U4Dt0RLqAuso
-meoSgxf0RNAYmk5hqmVREIxna0jjNCcsisXlCWZg58NcGtMuscnyUhnfh4BCjzOn
-/DUSqG+WGMpFp01So4cdp0XOgJK02VhsVkvXRA0CgYBnbdj1jUkrW8VPZbf8T0wy
-QMKw/5LwOb3KW6o36hT3iBxb46fFXKl6ZUuivjD/SHc6UsElSVZXq/nSPCv2ccGq
-wpGhzaivyNBpdt6ApXg2maxZrvNXZE99tJEcRw4MXVM3A6G6bIps8XMGGEyN63k8
-IoznDGf2PC/mZUfOrLJufQKBgQDVW0qoHnlRznqgnXOGv+LKvaDPL1a8MSfo8PHN
-kicRqnMp+BEVKH5D87LWTVoK462fhGAGoFH3woVo+0WokODqgNP+3CWg0agoD+D9
-/LyoLwflHL/vbLYaneNRGFoxG8wVL9WPqCq3/+mAs4zWDGKNkHOyXxDo+SXb+1Zb
-cB8voQKBgQDPSrWPVVJ5Ht+Tjc3ZzxCE+XOTMkIV3boAxqAekqRB9qTh0Zif6/sD
-SCglFlt6kyNXP17todX+/rjKCUl4ZQTxSQzeq/9zZs4YimcFNI6AU9Ld1Ga28AF5
-EUJzAV4JBM/Baewq7Jo1URCPFrZ4mE0AtRg6gOJN26Vc4yBicTM5bw==
------END RSA PRIVATE KEY-----
-
-```
+`ssh-keygen` でフォーマットを指定しない場合、公開鍵として以下のようなファイルが生成される
 
 ```
 ⟩ cat test_rsa.pub
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDyDtKMObky+8Ir8wvuT7Ho2EBycqJ1xRIHCxt//wi/55bszy4yMCcqFy2Jb+o5umQjD5uoAhEXeedybXimvf81lXcsy1iRTuo83Udjf4eNHF7+/oNpMEhNzOcBOogfOkmSlTxBk4wkw1sjbOsflv2CC0HtLu7c9qZCBTRGgPYBAd8VMJwiPme6kmfjsOkI7JExMAVF8yQMPwRbczJm8ex3lbbSZ6Kdd/lvtelVFSkOGL783mxErJeXlgKMktfRQ3AoMVWG+cLGqJgCHXfrbFcjosW4H6mHGgkQFP/JkY8Cqzl3IEv+Y4AT4QvKTWIWQiqqWXnFX2A/rCaWf0eqU6VL r_takaishi@takaishiryou-no-iMac.local
 ```
+
+これはRFC4716の形式。`-m`オプションで指定することで、PKCS8やPEMといったフォーマットを使うこともできる。
 
 ```
      -m key_format
@@ -76,11 +18,9 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDyDtKMObky+8Ir8wvuT7Ho2EBycqJ1xRIHCxt//wi/
 RFC4716  (RFC 4716/SSH2 public or private key),
 PKCS8 (PEM PKCS8 public key)
 PEM'' (PEM public key)
-```
 
 
-pemを指定した場合。
-
+RFC4716形式からPEM形式に変換できる。
 
 ```
 ⟩ ssh-keygen -f ./test_rsa.pub -e -m pem > test_rsa.pem
@@ -97,8 +37,8 @@ E+ELyk1iFkIqqll5xV9gP6wmln9HqlOlSwIDAQAB
 
 ```
 
+PKCS8に変換もできる。この形式だと、`x509.ParsePKIXPublicKey`でパース可能。
 
-PKCS8を指定した場合。`BEGIN PUBLIC KEY`となる。`x509.ParsePKIXPublicKey`でパース可能。
 ```
 ⟩ ssh-keygen -f ./test_rsa.pub -e -m pkcs8 > test_rsa.pkcs8
 
@@ -115,8 +55,22 @@ SwIDAQAB
 
 ```
 
+## RFC4716形式の公開鍵を用いて暗号化する
+
+
+```
+⟩ echo "hello, world!" | go run encrypt_with_ssh_publickey.go  | go run ../rsa_encrypt_and_decrypt/decrypt/decrypt_with_rsa_privatekey.go ./test_rsa
+hello, world!⏎
+```
+
+
 
 # 参考文献
 
+- http://blog.oddbit.com/2011/05/08/converting-openssh-public-keys/
 - https://ja.wikipedia.org/wiki/PKCS
-https://gist.github.com/thwarted/1024558
+- https://gist.github.com/thwarted/1024558print
+- https://github.com/yosida95/golang-sshkey
+- https://github.com/goken/goken/blob/master/goken09-binary/goken09-binary.md
+- https://yosida95.com/2015/05/31/121709.html
+- https://tools.ietf.org/html/rfc4716
