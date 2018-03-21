@@ -33,6 +33,5 @@ hello, world!⏎
 
 ## 参考文献
 
-- [Golang で RSA 署名
-](https://m0t0k1ch1st0ry.com/blog/2014/08/18/rsa-signing/)
+- [Golang で RSA 署名](https://m0t0k1ch1st0ry.com/blog/2014/08/18/rsa-signing/)
 - https://golang.org/pkg/crypto/rsa/
