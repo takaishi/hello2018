@@ -9,8 +9,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/rancher/os/log"
 	"io/ioutil"
+	"log"
 	"os"
 )
 
