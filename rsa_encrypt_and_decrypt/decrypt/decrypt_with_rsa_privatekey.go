@@ -1,16 +1,16 @@
 package main
 
 import (
-"io/ioutil"
-"github.com/rancher/os/log"
-"fmt"
-"encoding/pem"
-"crypto/x509"
-"crypto/rsa"
-"errors"
-"crypto/rand"
-"encoding/base64"
 	"bufio"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
+	"errors"
+	"fmt"
+	"github.com/rancher/os/log"
+	"io/ioutil"
 	"os"
 )
 
@@ -56,7 +56,6 @@ func readFromStdin() string {
 	return stdin.Text()
 }
 
-
 func main() {
 	priKey, err := readPrivateKey(os.Args[1])
 	if err != nil {
@@ -70,6 +69,4 @@ func main() {
 
 	fmt.Print(decrypted)
 
-
 }
-

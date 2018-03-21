@@ -1,15 +1,15 @@
 package rsa_encrypt_and_decrypt
 
 import (
-	"io/ioutil"
-	"github.com/rancher/os/log"
-	"fmt"
-	"encoding/pem"
-	"crypto/x509"
-	"crypto/rsa"
-	"errors"
 	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
+	"errors"
+	"fmt"
+	"github.com/rancher/os/log"
+	"io/ioutil"
 )
 
 func readPrivateKey(path string) (*rsa.PrivateKey, error) {
@@ -35,7 +35,6 @@ func readPrivateKey(path string) (*rsa.PrivateKey, error) {
 	return key, nil
 }
 
-
 func readPublicKey(path string) (*rsa.PublicKey, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -56,7 +55,7 @@ func readPublicKey(path string) (*rsa.PublicKey, error) {
 		return nil, err
 	}
 
-	key, ok  := keyInterface.(*rsa.PublicKey)
+	key, ok := keyInterface.(*rsa.PublicKey)
 	if !ok {
 		return nil, errors.New("not RSA public key")
 	}
@@ -75,7 +74,7 @@ func encrypt(s string, key *rsa.PublicKey) (string, error) {
 }
 
 func decrypt(s string, key *rsa.PrivateKey) (string, error) {
-    in, err := base64.StdEncoding.DecodeString(s)
+	in, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
 		return "", err
 	}
@@ -103,11 +102,10 @@ func main() {
 	fmt.Printf("input: %s\n", s)
 	fmt.Printf("encrypted(base64 encoded): %s\n", encrypted)
 
-
 	fmt.Println("")
 	fmt.Println(">>>> Decrypt Phase")
 
-    priKey, err := readPrivateKey("./private_key.pem")
+	priKey, err := readPrivateKey("./private_key.pem")
 	if err != nil {
 		log.Fatalf("Failed to read private key: %s", err)
 	}
@@ -118,6 +116,5 @@ func main() {
 
 	fmt.Printf("input(base64 encoded): %s\n", encrypted)
 	fmt.Printf("decrypted: %s\n", string(decrypted))
-
 
 }
