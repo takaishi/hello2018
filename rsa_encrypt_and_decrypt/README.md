@@ -29,8 +29,6 @@ Base64形式の文字列を標準入力で渡すと、複合して標準出力�
 hello, world!⏎
 ```
 
-```
-
 ## 参考文献
 
 - [Golang で RSA 署名](https://m0t0k1ch1st0ry.com/blog/2014/08/18/rsa-signing/)
