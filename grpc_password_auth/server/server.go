@@ -8,8 +8,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
 	"fmt"
+	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
+	"github.com/takaishi/hello2018/grpc_password_auth/server/auth"
 )
 
 type customerService struct {
@@ -18,6 +19,7 @@ type customerService struct {
 }
 
 func (cs *customerService) ListPerson(p *pb.RequestType, stream pb.CustomerService_ListPersonServer) error {
+	fmt.Println("ListPerson")
 	cs.m.Lock()
 	defer cs.m.Unlock()
 	for _, p := range cs.customers {
@@ -29,6 +31,7 @@ func (cs *customerService) ListPerson(p *pb.RequestType, stream pb.CustomerServi
 }
 
 func (cs *customerService) AddPerson(c context.Context, p *pb.Person) (*pb.ResponseType, error) {
+	fmt.Println("AddPerson")
 	cs.m.Lock()
 	defer cs.m.Unlock()
 	cs.customers = append(cs.customers, p)
@@ -36,11 +39,21 @@ func (cs *customerService) AddPerson(c context.Context, p *pb.Person) (*pb.Respo
 }
 
 func main() {
+	a := auth.NewAuthorizer("admin", "admin123")
+
 	lis, err := net.Listen("tcp", ":11111")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	server := grpc.NewServer()
+
+	//stm := []grpc.StreamServerInterceptor{}
+
+	server := grpc.NewServer(
+		grpc.StreamInterceptor(a.HandleStream),
+		grpc.UnaryInterceptor(a.HandleUnary),
+	)
+
+	fmt.Printf("server: %#v\n", server)
 
 	pb.RegisterCustomerServiceServer(server, new(customerService))
 	server.Serve(lis)

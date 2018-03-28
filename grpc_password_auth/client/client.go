@@ -5,19 +5,42 @@ import (
 	"io"
 	"strconv"
 
-	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
 	"github.com/mattn/sc"
+	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
+type loginCreds struct {
+	Username, Password string
+}
+
+func (c *loginCreds) GetRequestMetadata(context.Context, ...string) (map[string]string, error) {
+	fmt.Println("GetRequestMetadata")
+	return map[string]string{
+		"username": c.Username,
+		"password": c.Password,
+	}, nil
+}
+
+func (c *loginCreds) RequireTransportSecurity() bool {
+	return false
+}
+
 func add(name string, age int) error {
-	conn, err := grpc.Dial("127.0.0.1:11111", grpc.WithInsecure())
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithPerRPCCredentials(&loginCreds{Username: "admin",Password: "admin123",}),
+	}
+	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	defer conn.Close()
+
 	client := pb.NewCustomerServiceClient(conn)
+	fmt.Printf("client: %#v\n", client)
 
 	person := &pb.Person{
 		Name: name,
@@ -28,7 +51,13 @@ func add(name string, age int) error {
 }
 
 func list() error {
-	conn, err := grpc.Dial("127.0.0.1:11111", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:11111",
+		grpc.WithInsecure(),
+		grpc.WithPerRPCCredentials(&loginCreds{
+			Username: "admin",
+			Password: "admin123a",
+		},
+		))
 	if err != nil {
 		return err
 	}
