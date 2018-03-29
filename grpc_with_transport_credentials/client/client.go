@@ -7,6 +7,7 @@ import (
 
 	"github.com/mattn/sc"
 	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
+	sshTC2 "github.com/takaishi/hello2018/grpc_with_transport_credentials/sshTC"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -28,9 +29,10 @@ func (c *loginCreds) RequireTransportSecurity() bool {
 }
 
 func add(name string, age int) error {
+	sshTC := sshTC2.NewClientCreds()
 	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
-		grpc.WithPerRPCCredentials(&loginCreds{Username: "admin",Password: "admin123",}),
+		grpc.WithTransportCredentials(sshTC),
+		grpc.WithBlock(),
 	}
 	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
 	if err != nil {
@@ -51,13 +53,13 @@ func add(name string, age int) error {
 }
 
 func list() error {
-	conn, err := grpc.Dial("127.0.0.1:11111",
-		grpc.WithInsecure(),
-		grpc.WithPerRPCCredentials(&loginCreds{
-			Username: "admin",
-			Password: "admin123a",
-		},
-		))
+	sshTC := sshTC2.NewClientCreds()
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(sshTC),
+		grpc.WithBlock(),
+	}
+
+	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
 	if err != nil {
 		return err
 	}

@@ -12,11 +12,11 @@ type sshTC struct {
 }
 
 func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
-	return nil, nil, err
+	return rawConn, nil, err
 }
 
 func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
-	return nil, nil, err
+	return rawConn, nil, err
 }
 
 func (tc *sshTC) Info() credentials.ProtocolInfo {
@@ -39,6 +39,15 @@ func NewServerCreds() credentials.TransportCredentials {
 		info: &credentials.ProtocolInfo{
 			SecurityProtocol: "ssh",
 			SecurityVersion: "1.0",
+		},
+	}
+}
+
+func NewClientCreds() credentials.TransportCredentials {
+	return &sshTC{
+		info: &credentials.ProtocolInfo{
+			SecurityProtocol: "ssh",
+			SecurityVersion:  "1.0",
 		},
 	}
 }

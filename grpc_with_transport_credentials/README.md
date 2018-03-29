@@ -4,3 +4,9 @@
 - https://mattn.kaoriya.net/software/lang/go/20150227144125.htm
 - https://github.com/grpc/grpc-go/issues/106#issuecomment-246978683
 - https://github.com/buckhx/safari-zone
+- https://blog.gopheracademy.com/advent-2017/go-grpc-beyond-basics/
+
+- [How to achieve ssh like auth based on SSL public keys?](https://github.com/grpc/grpc-go/issues/1252)
+
+- [TransportCredentials](https://github.com/grpc/grpc-go/blob/v1.11.0/credentials/credentials.go#L82)
+- [alts](https://github.com/grpc/grpc-go/blob/v1.11.0/credentials/alts/alts.go#L102)
