@@ -10,7 +10,7 @@ import (
 
 	"fmt"
 	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
-	"github.com/takaishi/hello2018/grpc_password_auth/server/auth"
+	"github.com/takaishi/hello2018/grpc_with_transport_credentials/sshTC"
 )
 
 type customerService struct {
@@ -39,19 +39,15 @@ func (cs *customerService) AddPerson(c context.Context, p *pb.Person) (*pb.Respo
 }
 
 func main() {
-	a := auth.NewAuthorizer("admin", "admin123")
 
 	lis, err := net.Listen("tcp", ":11111")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	//stm := []grpc.StreamServerInterceptor{}
+	sshTC := sshTC.NewServerCreds()
 
-	server := grpc.NewServer(
-		grpc.StreamInterceptor(a.HandleStream),
-		grpc.UnaryInterceptor(a.HandleUnary),
-	)
+	server := grpc.NewServer(grpc.Creds(sshTC))
 
 	fmt.Printf("server: %#v\n", server)
 
