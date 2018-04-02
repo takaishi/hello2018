@@ -4,6 +4,7 @@ import (
 	"golang.org/x/net/context"
 	"net"
 	"google.golang.org/grpc/credentials"
+	"fmt"
 )
 
 type sshTC struct {
@@ -12,10 +13,19 @@ type sshTC struct {
 }
 
 func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
+	fmt.Printf("ClientHandshake\n")
+	buf := make([]byte, 2014)
+	_, err = rawConn.Read(buf)
+	if err != nil {
+		fmt.Printf("Read error: %s\n", err)
+	}
+	fmt.Printf("%s\n", string(buf))
 	return rawConn, nil, err
 }
 
 func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
+	fmt.Printf("ServerHandshake\n")
+	rawConn.Write([]byte("Hello!"))
 	return rawConn, nil, err
 }
 
