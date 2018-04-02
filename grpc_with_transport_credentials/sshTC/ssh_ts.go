@@ -33,11 +33,8 @@ func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.C
 		fmt.Printf("Read error: %s\n", err)
 	}
 	key, err := tc.readPrivateKey("../test_rsa")
-	fmt.Println(string(buf))
-	s := make([]byte, n)
-	s = buf[0:n]
 
-	decrypted, err := tc.Decrypt(string(s), key)
+	decrypted, err := tc.Decrypt(string(buf[:n]), key)
 	if err != nil {
 		fmt.Printf("Failed to decrypt: %s\n", err)
 	}
@@ -75,12 +72,11 @@ func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.Au
 	}
 	fmt.Printf("hash: %s\n", buf)
 
-	a := make([]byte, n)
-	a = buf[0:n]
+	buf = buf[:n]
 	fmt.Println("===============")
-	fmt.Printf("a: %#v\n", strings.TrimRight(string(a), "\n"))
+	fmt.Printf("a: %#v\n", strings.TrimRight(string(buf), "\n"))
 	fmt.Printf("b: %#v\n", fmt.Sprintf("%x", h))
-	if strings.TrimRight(string(a), "\n") == fmt.Sprintf("%x", h) {
+	if strings.TrimRight(string(buf), "\n") == fmt.Sprintf("%x", h) {
 		fmt.Println("Success!!!")
 	} else {
 		fmt.Println("Baaaaaaaaaaaaaaaad!!")
