@@ -10,8 +10,8 @@ import (
 	"crypto/rand"
 )
 
-func (tc *sshTC) Encrypt(s string) (string, error) {
-	pubKey, err := readPublicKey("../test_rsa.pub")
+func (tc *sshTC) Encrypt(s string, pubKeyPath string) (string, error) {
+	pubKey, err := readPublicKey(pubKeyPath)
 	if err != nil {
 		return "", err
 	}

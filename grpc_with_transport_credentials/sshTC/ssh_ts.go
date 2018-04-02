@@ -90,7 +90,7 @@ func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.Au
 
 
 	// 乱数を暗号化してクライアントに送信
-	encrypted, err := tc.Encrypt(s)
+	encrypted, err := tc.Encrypt(s, "../test_rsa.pub")
 	if err != nil {
 		fmt.Printf("Failed to encrypt: %s\n", err)
 	}
