@@ -10,3 +10,5 @@
 
 - [TransportCredentials](https://github.com/grpc/grpc-go/blob/v1.11.0/credentials/credentials.go#L82)
 - [alts](https://github.com/grpc/grpc-go/blob/v1.11.0/credentials/alts/alts.go#L102)
+- http://nigohiroki.hatenablog.com/entry/2013/08/18/221434
+- https://qiita.com/srtkkou/items/ccbddc881d6f3549baf1
