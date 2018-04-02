@@ -13,9 +13,12 @@ import (
 	"crypto/rsa"
 	"log"
 	"crypto/rand"
+	mrand "math/rand"
 	"encoding/pem"
 	"errors"
 	"crypto/x509"
+	"crypto/sha256"
+	"strings"
 )
 
 type sshTC struct {
@@ -62,6 +65,7 @@ func (tc *sshTC) encrypt(s string) (string, error) {
 
 func (tc *sshTC) decrypt(s string) (string, error){
 	rawKey, err := ioutil.ReadFile("../test_rsa")
+	//rawKey, err := ioutil.ReadFile("../invalid_rsa")
 	if err != nil {
 		return "", err
 	}
@@ -86,6 +90,16 @@ func (tc *sshTC) decrypt(s string) (string, error){
 	return string(decrypted), nil
 }
 
+const rs3Letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func (tc *sshTC) randString() string {
+	b := make([]byte, 10)
+	for i := range b {
+		b[i] = rs3Letters[int(mrand.Int63()%int64(len(rs3Letters)))]
+	}
+	return string(b)
+}
+
 func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
 	fmt.Printf("ClientHandshake\n")
 	buf := make([]byte, 2014)
@@ -97,18 +111,51 @@ func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.C
 	if err != nil {
 		fmt.Printf("Failed to decrypt: %s\n", err)
 	}
-	fmt.Printf("%s\n", decrypted)
+	h := sha256.Sum256([]byte(decrypted))
+	fmt.Printf("s = %s\n", decrypted)
+	fmt.Printf("h = %x\n", h)
+
+	rawConn.Write([]byte(fmt.Sprintf("%x\n", h)))
 	return rawConn, nil, err
 }
 
 func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
 	fmt.Printf("ServerHandshake\n")
-	encrypted, err := tc.encrypt("Hello!")
+
+	// 乱数を生成する
+	s := tc.randString()
+	h := sha256.Sum256([]byte(s))
+	fmt.Printf("s = %s\n", s)
+	fmt.Printf("h = %x\n", h)
+
+
+	// 乱数を暗号化してクライアントに送信
+	encrypted, err := tc.encrypt(s)
 	if err != nil {
 		fmt.Printf("Failed to encrypt: %s\n", err)
 	}
-	fmt.Printf("encrypted: %s\n", encrypted)
+	//fmt.Printf("encrypted: %s\n", encrypted)
 	rawConn.Write([]byte(encrypted))
+
+	// クライアントからハッシュ値を受け取る
+	buf := make([]byte, 2014)
+	n, err := rawConn.Read(buf)
+	if err != nil {
+		fmt.Printf("Read error: %s\n", err)
+	}
+	fmt.Printf("hash: %s\n", buf)
+
+	a := make([]byte, n)
+	a = buf[0:n]
+	fmt.Println("===============")
+	fmt.Printf("a: %#v\n", strings.TrimRight(string(a), "\n"))
+	fmt.Printf("b: %#v\n", fmt.Sprintf("%x", h))
+	if strings.TrimRight(string(a), "\n") == fmt.Sprintf("%x", h) {
+		fmt.Println("Success!!!")
+	} else {
+		fmt.Println("Baaaaaaaaaaaaaaaad!!")
+	}
+
 	return rawConn, nil, err
 }
 
