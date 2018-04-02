@@ -6,10 +6,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"fmt"
 	"io/ioutil"
-	"bytes"
 	"encoding/base64"
-	"encoding/binary"
-	"math/big"
 	"crypto/rsa"
 	"log"
 	"crypto/rand"
@@ -24,43 +21,6 @@ import (
 type sshTC struct {
 	info *credentials.ProtocolInfo
 
-}
-
-func (tc *sshTC) encrypt(s string) (string, error) {
-	rawPubKey, err := ioutil.ReadFile("../test_rsa.pub")
-	//rawPubKey, err := ioutil.ReadFile("../invalid_rsa.pub")
-	if err != nil {
-		return "", err
-	}
-	key := bytes.Split(rawPubKey, []byte(" "))[1]
-	keydata, err := base64.StdEncoding.DecodeString(string(key))
-	if err != nil {
-		return "", err
-	}
-
-	parts := [][]byte{}
-	for len(keydata) > 0 {
-		var dlen uint32
-		binary.Read(bytes.NewReader(keydata[:4]), binary.BigEndian, &dlen)
-
-		data := keydata[4 : dlen+4]
-		keydata = keydata[4+dlen:]
-		parts = append(parts, data)
-	}
-
-	n_val := new(big.Int).SetBytes(parts[2])
-	e_val := int(new(big.Int).SetBytes(parts[1]).Int64())
-
-	pubKey := &rsa.PublicKey{
-		N: n_val,
-		E: e_val,
-	}
-
-	e, err := rsa.EncryptPKCS1v15(rand.Reader, pubKey, []byte(s))
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(e), nil
 }
 
 func (tc *sshTC) decrypt(s string) (string, error){
@@ -130,7 +90,7 @@ func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.Au
 
 
 	// 乱数を暗号化してクライアントに送信
-	encrypted, err := tc.encrypt(s)
+	encrypted, err := tc.Encrypt(s)
 	if err != nil {
 		fmt.Printf("Failed to encrypt: %s\n", err)
 	}
