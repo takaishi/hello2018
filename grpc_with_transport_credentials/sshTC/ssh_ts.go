@@ -5,15 +5,7 @@ import (
 	"net"
 	"google.golang.org/grpc/credentials"
 	"fmt"
-	"io/ioutil"
-	"encoding/base64"
-	"crypto/rsa"
-	"log"
-	"crypto/rand"
 	mrand "math/rand"
-	"encoding/pem"
-	"errors"
-	"crypto/x509"
 	"crypto/sha256"
 	"strings"
 )
@@ -21,33 +13,6 @@ import (
 type sshTC struct {
 	info *credentials.ProtocolInfo
 
-}
-
-func (tc *sshTC) decrypt(s string) (string, error){
-	rawKey, err := ioutil.ReadFile("../test_rsa")
-	//rawKey, err := ioutil.ReadFile("../invalid_rsa")
-	if err != nil {
-		return "", err
-	}
-
-	block, _ := pem.Decode(rawKey)
-	if block == nil {
-		log.Fatal("invalid private key data")
-	}
-
-	if got, want := block.Type, "RSA PRIVATE KEY"; got != want {
-		return "", errors.New(fmt.Sprintf("invalid key type: %s", block.Type))
-	}
-
-	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return "", err
-	}
-
-	in, err := base64.StdEncoding.DecodeString(s)
-	decrypted, err := rsa.DecryptPKCS1v15(rand.Reader, key, in)
-
-	return string(decrypted), nil
 }
 
 const rs3Letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -63,11 +28,16 @@ func (tc *sshTC) randString() string {
 func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
 	fmt.Printf("ClientHandshake\n")
 	buf := make([]byte, 2014)
-	_, err = rawConn.Read(buf)
+	n, err := rawConn.Read(buf)
 	if err != nil {
 		fmt.Printf("Read error: %s\n", err)
 	}
-	decrypted, err := tc.decrypt(string(buf))
+	key, err := tc.readPrivateKey("../test_rsa")
+	fmt.Println(string(buf))
+	s := make([]byte, n)
+	s = buf[0:n]
+
+	decrypted, err := tc.Decrypt(string(s), key)
 	if err != nil {
 		fmt.Printf("Failed to decrypt: %s\n", err)
 	}
