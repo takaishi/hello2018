@@ -16,7 +16,7 @@ func add(name string, age int) error {
 	sshTC := sshTC2.NewClientCreds()
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(sshTC),
-		grpc.WithBlock(),
+		//grpc.WithBlock(),
 	}
 	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
 	if err != nil {
@@ -38,7 +38,7 @@ func list() error {
 	sshTC := sshTC2.NewClientCreds()
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(sshTC),
-		grpc.WithBlock(),
+		//grpc.WithBlock(),
 	}
 
 	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
