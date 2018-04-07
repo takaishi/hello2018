@@ -60,6 +60,19 @@ func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.C
 	h := sha256.Sum256([]byte(decrypted))
 
 	rawConn.Write([]byte(fmt.Sprintf("%x\n", h)))
+
+	r := make([]byte, 64)
+	n, err = rawConn.Read(r)
+	if err != nil {
+		fmt.Printf("Read error: %s\n", err)
+		return nil, nil, err
+	}
+	r = r[:n]
+	if string(r) != "ok" {
+		fmt.Println("Failed to authenticate")
+		return nil, nil, errors.New("Failed to authenticate")
+	}
+
 	return rawConn, nil, err
 }
 
