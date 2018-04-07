@@ -8,6 +8,7 @@ import (
 	mrand "math/rand"
 	"crypto/sha256"
 	"strings"
+	"os"
 )
 
 type sshTC struct {
@@ -25,6 +26,22 @@ func (tc *sshTC) randString() string {
 	return string(b)
 }
 
+func privateKeyPath() string {
+	if os.Getenv("SSH_PRIVATE_KEY_PATH") != "" {
+		return os.Getenv("SSH_PRIVATE_KEY_PATH")
+	} else {
+		return 	fmt.Sprintf("%s/.ssh/id_rsa", os.Getenv("HOME"))
+	}
+}
+
+func publicKeyPath() string {
+	if os.Getenv("SSH_PUBLIC_KEY_PATH") != "" {
+		return os.Getenv("SSH_PUBLIC_KEY_PATH")
+	} else {
+		return 	fmt.Sprintf("%s/.ssh/id_rsa.pub", os.Getenv("HOME"))
+	}
+}
+
 func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
 	fmt.Printf("ClientHandshake\n")
 	buf := make([]byte, 2014)
@@ -32,7 +49,7 @@ func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.C
 	if err != nil {
 		fmt.Printf("Read error: %s\n", err)
 	}
-	key, err := tc.readPrivateKey("../test_rsa")
+	key, err := tc.readPrivateKey(privateKeyPath())
 
 	decrypted, err := tc.Decrypt(string(buf[:n]), key)
 	if err != nil {
@@ -57,7 +74,7 @@ func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.Au
 
 
 	// 乱数を暗号化してクライアントに送信
-	encrypted, err := tc.Encrypt(s, "../test_rsa.pub")
+	encrypted, err := tc.Encrypt(s, publicKeyPath())
 	if err != nil {
 		fmt.Printf("Failed to encrypt: %s\n", err)
 	}
