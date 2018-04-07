@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"strings"
 	"os"
+	"errors"
 )
 
 type sshTC struct {
@@ -47,12 +48,14 @@ func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.C
 	n, err := rawConn.Read(buf)
 	if err != nil {
 		fmt.Printf("Read error: %s\n", err)
+		return nil, nil, err
 	}
 	key, err := tc.readPrivateKey(privateKeyPath())
 
 	decrypted, err := tc.Decrypt(string(buf[:n]), key)
 	if err != nil {
 		fmt.Printf("Failed to decrypt: %s\n", err)
+		return nil, nil, err
 	}
 	h := sha256.Sum256([]byte(decrypted))
 
@@ -68,7 +71,7 @@ func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.Au
 	// 乱数を暗号化してクライアントに送信
 	encrypted, err := tc.Encrypt(s, publicKeyPath())
 	if err != nil {
-		fmt.Printf("Failed to encrypt: %s\n", err)
+		return nil, nil, errors.New(fmt.Sprintf("Failed to encrypt: %s\n", err))
 	}
 	//fmt.Printf("encrypted: %s\n", encrypted)
 	rawConn.Write([]byte(encrypted))
@@ -77,13 +80,13 @@ func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.Au
 	buf := make([]byte, 2014)
 	n, err := rawConn.Read(buf)
 	if err != nil {
-		fmt.Printf("Read error: %s\n", err)
+		return nil, nil, errors.New(fmt.Sprintf("Read error: %s\n", err))
 	}
 	buf = buf[:n]
 	if strings.TrimRight(string(buf), "\n") == fmt.Sprintf("%x", h) {
 		fmt.Println("Success!!!")
 	} else {
-		fmt.Println("Baaaaaaaaaaaaaaaad!!")
+		return nil, nil, errors.New(fmt.Sprintf("Failed to authenticate: invalid key"))
 	}
 
 	return rawConn, nil, err
