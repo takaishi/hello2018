@@ -42,8 +42,6 @@ func add(name string, age int) error {
 	defer conn.Close()
 
 	client := pb.NewCustomerServiceClient(conn)
-	fmt.Printf("client: %#v\n", client)
-
 	person := &pb.Person{
 		Name: name,
 		Age:  int32(age),
