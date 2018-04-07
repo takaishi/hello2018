@@ -9,9 +9,12 @@ import (
 	"encoding/base64"
 	"crypto/rsa"
 	"crypto/rand"
+	"log"
 )
 
 func (tc *sshTC) Decrypt(s string, key *rsa.PrivateKey) (string, error){
+	log.Printf("[DEBUG] s: %s\n", s)
+	log.Printf("[DEBUG] key: %#v\n", key)
 	in, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
 		return "", err

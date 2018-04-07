@@ -6,10 +6,15 @@ import (
 	"google.golang.org/grpc/credentials"
 	"fmt"
 	mrand "math/rand"
-	"crypto/sha256"
-	"strings"
 	"os"
 	"errors"
+	"log"
+	"net/http"
+	"io/ioutil"
+	"encoding/json"
+	"github.com/STNS/STNS/stns"
+	"crypto/sha256"
+	"strings"
 )
 
 type sshTC struct {
@@ -25,6 +30,13 @@ func (tc *sshTC) randString() string {
 		b[i] = rs3Letters[int(mrand.Int63()%int64(len(rs3Letters)))]
 	}
 	return string(b)
+}
+
+func getUsername() (string, error) {
+	if os.Getenv("SSH_USER") == "" {
+		return "", errors.New("require SSH_USER")
+	}
+	return os.Getenv("SSH_USER"), nil
 }
 
 func privateKeyPath() string {
@@ -44,13 +56,28 @@ func publicKeyPath() string {
 }
 
 func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
+	username, err := getUsername()
+	log.Printf("[DEBUG] username: %s\n", string(username))
+
+	if err != nil {
+		return nil, nil, err
+	}
+	rawConn.Write([]byte(username))
+
+
 	buf := make([]byte, 2014)
 	n, err := rawConn.Read(buf)
 	if err != nil {
 		fmt.Printf("Read error: %s\n", err)
 		return nil, nil, err
 	}
+	log.Printf("[DEBUG] privateKeyPath: %s\n", privateKeyPath())
+	log.Printf("[DEBUG] buf: %s\n", string(buf[:n]))
 	key, err := tc.readPrivateKey(privateKeyPath())
+	if err != nil {
+		fmt.Printf("Failed to read private key: %s\n", err)
+		return nil, nil, err
+	}
 
 	decrypted, err := tc.Decrypt(string(buf[:n]), key)
 	if err != nil {
@@ -76,22 +103,57 @@ func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.C
 	return rawConn, nil, err
 }
 
+type v2Metadata struct {
+	APIVersion float64 `json:"api_version"`
+	Result string `json:"result"`
+
+}
+type UserResponse struct {
+	Metadata v2Metadata `json:"metadata"`
+	Items stns.Attributes `json:"items"`
+}
+
+func (tc *sshTC) getPubKeyFromSTNS(name string) ([]byte, error) {
+	var user_resp UserResponse
+
+	resp, err := http.Get(fmt.Sprintf("http://localhost:1104/v2/user/name/%s", name))
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	json.Unmarshal(body, &user_resp)
+	return []byte(user_resp.Items[name].User.Keys[0]), nil
+}
+
 func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
 	// 乱数を生成する
 	s := tc.randString()
 	h := sha256.Sum256([]byte(s))
 
-	// 乱数を暗号化してクライアントに送信
-	encrypted, err := tc.Encrypt(s, publicKeyPath())
+	// ユーザー名を読み込み&STNSからPublicKeyを取得
+	buf := make([]byte, 2014)
+	n, err := rawConn.Read(buf)
+	if err != nil {
+		return nil, nil, errors.New(fmt.Sprintf("Read error: %s\n", err))
+	}
+	rawKey, err := tc.getPubKeyFromSTNS(string(buf[:n]))
+	if err != nil {
+		return nil, nil, err
+	}
+	log.Printf("[DEBUG] rawKey = %s\n", string(rawKey))
+
+	pubKey, err := tc.ParsePublicKey(rawKey)
+	if err != nil {
+		return nil, nil, errors.New(fmt.Sprintf("Failed to parse: %s\n", err))
+	}
+	encrypted, err := tc.Encrypt(s, pubKey)
 	if err != nil {
 		return nil, nil, errors.New(fmt.Sprintf("Failed to encrypt: %s\n", err))
 	}
-	//fmt.Printf("encrypted: %s\n", encrypted)
 	rawConn.Write([]byte(encrypted))
 
-	// クライアントからハッシュ値を受け取る
-	buf := make([]byte, 2014)
-	n, err := rawConn.Read(buf)
+	buf = make([]byte, 2014)
+	n, err = rawConn.Read(buf)
 	if err != nil {
 		return nil, nil, errors.New(fmt.Sprintf("Read error: %s\n", err))
 	}

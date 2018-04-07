@@ -8,8 +8,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
-	"github.com/takaishi/hello2018/grpc_with_transport_credentials/sshTC"
+	pb "github.com/takaishi/hello2018/grpc_with_stns/protocol"
+	"github.com/takaishi/hello2018/grpc_with_stns/sshTC"
 )
 
 type customerService struct {

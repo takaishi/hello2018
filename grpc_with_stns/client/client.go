@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/mattn/sc"
-	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
-	sshTC2 "github.com/takaishi/hello2018/grpc_with_transport_credentials/sshTC"
+	pb "github.com/takaishi/hello2018/grpc_with_stns/protocol"
+	sshTC2 "github.com/takaishi/hello2018/grpc_with_stns/sshTC"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"github.com/hashicorp/logutils"
@@ -72,7 +72,7 @@ func list() error {
 func main() {
 	filter := &logutils.LevelFilter{
 		Levels: []logutils.LogLevel{"DEBUG", "WARN", "ERROR"},
-		MinLevel: logutils.LogLevel("WARN"),
+		MinLevel: logutils.LogLevel("DEBUG"),
 		Writer: os.Stderr,
 	}
 	log.SetOutput(filter)
