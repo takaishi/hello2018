@@ -97,8 +97,10 @@ func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.Au
 	}
 	buf = buf[:n]
 	if strings.TrimRight(string(buf), "\n") == fmt.Sprintf("%x", h) {
+		rawConn.Write([]byte("ok"))
 		fmt.Println("Success!!!")
 	} else {
+		rawConn.Write([]byte("ng"))
 		return nil, nil, errors.New(fmt.Sprintf("Failed to authenticate: invalid key"))
 	}
 
