@@ -10,6 +10,9 @@ import (
 	sshTC2 "github.com/takaishi/hello2018/grpc_with_transport_credentials/sshTC"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"github.com/hashicorp/logutils"
+	"os"
+	"log"
 )
 
 func add(name string, age int) error {
@@ -67,6 +70,12 @@ func list() error {
 }
 
 func main() {
+	filter := &logutils.LevelFilter{
+		Levels: []logutils.LogLevel{"DEBUG", "WARN", "ERROR"},
+		MinLevel: logutils.LogLevel("WARN"),
+		Writer: os.Stderr,
+	}
+	log.SetOutput(filter)
 	(&sc.Cmds{
 		{
 			Name: "list",
