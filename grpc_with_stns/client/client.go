@@ -69,13 +69,28 @@ func list() error {
 	return nil
 }
 
-func main() {
+func logLevel() string {
+	envLevel := os.Getenv("LOG_LEVEL")
+	if envLevel == "" {
+		return "WARN"
+	} else {
+		return envLevel
+	}
+}
+
+func logOutput() (*logutils.LevelFilter){
 	filter := &logutils.LevelFilter{
 		Levels: []logutils.LogLevel{"DEBUG", "WARN", "ERROR"},
-		MinLevel: logutils.LogLevel("DEBUG"),
+		MinLevel: logutils.LogLevel(logLevel()),
 		Writer: os.Stderr,
 	}
-	log.SetOutput(filter)
+
+	return filter
+}
+
+func main() {
+	log.SetOutput(logOutput())
+
 	(&sc.Cmds{
 		{
 			Name: "list",
