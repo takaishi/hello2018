@@ -12,22 +12,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-type loginCreds struct {
-	Username, Password string
-}
-
-func (c *loginCreds) GetRequestMetadata(context.Context, ...string) (map[string]string, error) {
-	fmt.Println("GetRequestMetadata")
-	return map[string]string{
-		"username": c.Username,
-		"password": c.Password,
-	}, nil
-}
-
-func (c *loginCreds) RequireTransportSecurity() bool {
-	return false
-}
-
 func add(name string, age int) error {
 	sshTC := sshTC2.NewClientCreds()
 	opts := []grpc.DialOption{
