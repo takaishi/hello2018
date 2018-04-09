@@ -36,17 +36,6 @@ func (a *Authorizer) HandleStream(srv interface{}, stream grpc.ServerStream, inf
 	return handler(srv, stream)
 }
 
-func (a *Authorizer) authorize(ctx context.Context) (context.Context, error) {
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		fmt.Printf("md = %#v\n", md)
-		if len(md["username"]) > 0 && md["username"][0] == "admin" && len(md["password"]) > 0 && md["password"][0] == "admin123" {
-			return ctx, nil
-		}
-		return nil, fmt.Errorf("Access denied")
-	}
-	return ctx, fmt.Errorf("Metadata is empty")
-}
-
 func (a *Authorizer) Verify(username string, password string) error {
 	if username == "admin" && password == "admin123" {
 		return nil
