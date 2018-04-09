@@ -1,10 +1,10 @@
 package auth
 
 import (
+	"fmt"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 )
@@ -13,8 +13,8 @@ type Authorizer struct {
 	Username, Password string
 }
 
-func NewAuthorizer(username string, password string) (*Authorizer) {
-	return &Authorizer{Username: username, Password: password,}
+func NewAuthorizer(username string, password string) *Authorizer {
+	return &Authorizer{Username: username, Password: password}
 }
 
 func (a *Authorizer) HandleUnary(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
