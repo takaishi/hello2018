@@ -37,7 +37,7 @@ func (a *Authorizer) HandleStream(srv interface{}, stream grpc.ServerStream, inf
 }
 
 func (a *Authorizer) Verify(username string, password string) error {
-	if username == "admin" && password == "admin123" {
+	if username == a.Username && password == a.Password {
 		return nil
 	}
 	return fmt.Errorf("AccessDeniedError")
