@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"golang.org/x/net/context"
@@ -10,6 +10,7 @@ import (
 
 	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
 	"github.com/takaishi/hello2018/grpc_with_transport_credentials/sshTC"
+	"github.com/urfave/cli"
 )
 
 type customerService struct {
@@ -35,7 +36,7 @@ func (cs *customerService) AddPerson(c context.Context, p *pb.Person) (*pb.Respo
 	return new(pb.ResponseType), nil
 }
 
-func main() {
+func Start(c *cli.Context) {
 	lis, err := net.Listen("tcp", ":11111")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

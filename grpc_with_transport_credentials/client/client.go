@@ -1,18 +1,16 @@
-package main
+package client
 
 import (
 	"fmt"
 	"io"
-	"strconv"
-
-	"github.com/mattn/sc"
 	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
 	sshTC2 "github.com/takaishi/hello2018/grpc_with_transport_credentials/sshTC"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"github.com/urfave/cli"
 )
 
-func add(name string, age int) error {
+func Add(c *cli.Context, name string, age int) error {
 	sshTC := sshTC2.NewClientCreds()
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(sshTC),
@@ -34,7 +32,7 @@ func add(name string, age int) error {
 	return err
 }
 
-func list() error {
+func List(c *cli.Context) error {
 	sshTC := sshTC2.NewClientCreds()
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(sshTC),
@@ -63,31 +61,4 @@ func list() error {
 		fmt.Println(person)
 	}
 	return nil
-}
-
-func main() {
-	(&sc.Cmds{
-		{
-			Name: "list",
-			Desc: "list: listing person",
-			Run: func(c *sc.C, args []string) error {
-				return list()
-			},
-		},
-		{
-			Name: "add",
-			Desc: "add [name] [age]: add person",
-			Run: func(c *sc.C, args []string) error {
-				if len(args) != 2 {
-					return sc.UsageError
-				}
-				name := args[0]
-				age, err := strconv.Atoi(args[1])
-				if err != nil {
-					return err
-				}
-				return add(name, age)
-			},
-		},
-	}).Run(&sc.C{})
 }
