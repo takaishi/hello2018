@@ -3,7 +3,7 @@ package client
 import (
 	"fmt"
 	"io"
-	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
+	pb "github.com/takaishi/hello2018/grpc_with_transport_credentials/protocol"
 	sshTC2 "github.com/takaishi/hello2018/grpc_with_transport_credentials/sshTC"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -11,9 +11,8 @@ import (
 )
 
 func dial(c *cli.Context) (*grpc.ClientConn, error) {
-	sshTC := sshTC2.NewClientCreds(c.String("identity-file"))
+	sshTC := sshTC2.NewClientCreds(c.GlobalString("identity-file"))
 	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
 		grpc.WithTransportCredentials(sshTC),
 	}
 	return grpc.Dial("127.0.0.1:11111", opts...)

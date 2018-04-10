@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/hashicorp/logutils"
 	"github.com/mattn/sc"
-	"github.com/takaishi/hello2018/grpc_password_auth/client"
-	"github.com/takaishi/hello2018/grpc_password_auth/server"
+	"github.com/takaishi/hello2018/grpc_with_transport_credentials/client"
+	"github.com/takaishi/hello2018/grpc_with_transport_credentials/server"
 	"github.com/urfave/cli"
 	"log"
 	"os"

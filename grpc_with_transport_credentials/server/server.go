@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
+	pb "github.com/takaishi/hello2018/grpc_with_transport_credentials/protocol"
 	"github.com/takaishi/hello2018/grpc_with_transport_credentials/sshTC"
 	"github.com/urfave/cli"
 )
@@ -36,7 +36,7 @@ func (cs *customerService) AddPerson(c context.Context, p *pb.Person) (*pb.Respo
 	return new(pb.ResponseType), nil
 }
 
-func Start(c *cli.Context) {
+func Start(c *cli.Context) error {
 	lis, err := net.Listen("tcp", ":11111")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -44,5 +44,5 @@ func Start(c *cli.Context) {
 	sshTC := sshTC.NewServerCreds(c.String("public-key"))
 	server := grpc.NewServer(grpc.Creds(sshTC))
 	pb.RegisterCustomerServiceServer(server, new(customerService))
-	server.Serve(lis)
+	return server.Serve(lis)
 }
