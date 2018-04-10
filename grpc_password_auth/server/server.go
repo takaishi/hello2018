@@ -37,7 +37,7 @@ func (cs *customerService) AddPerson(c context.Context, p *pb.Person) (*pb.Respo
 }
 
 func Start(c *cli.Context) error {
-	a := auth.NewAuthorizer(c.String("username"), c.String("password"))
+	a := auth.NewAuthorizer(c.GlobalString("username"), c.GlobalString("password"))
 
 	lis, err := net.Listen("tcp", ":11111")
 	if err != nil {

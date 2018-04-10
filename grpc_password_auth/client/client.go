@@ -30,8 +30,8 @@ func dial(c *cli.Context) (*grpc.ClientConn, error) {
 		grpc.WithInsecure(),
 		grpc.WithPerRPCCredentials(
 			&loginCreds{
-				Username: c.String("username"),
-				Password: c.String("password"),
+				Username: c.GlobalString("username"),
+				Password: c.GlobalString("password"),
 			},
 		),
 	}
