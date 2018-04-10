@@ -1,12 +1,11 @@
-package main
+package client
 
 import (
 	"fmt"
 	"io"
-	"strconv"
 
-	"github.com/mattn/sc"
 	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
+	"github.com/urfave/cli"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -27,10 +26,10 @@ func (c *loginCreds) RequireTransportSecurity() bool {
 	return false
 }
 
-func add(name string, age int) error {
+func Add(c *cli.Context, name string, age int) error {
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
-		grpc.WithPerRPCCredentials(&loginCreds{Username: "admin", Password: "admin123"}),
+		grpc.WithPerRPCCredentials(&loginCreds{Username: c.String("username"), Password: c.String("password")}),
 	}
 	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
 	if err != nil {
@@ -50,12 +49,12 @@ func add(name string, age int) error {
 	return err
 }
 
-func list() error {
+func List(c *cli.Context) error {
 	conn, err := grpc.Dial("127.0.0.1:11111",
 		grpc.WithInsecure(),
 		grpc.WithPerRPCCredentials(&loginCreds{
-			Username: "admin",
-			Password: "admin123a",
+			Username: c.String("username"),
+			Password: c.String("password"),
 		},
 		))
 	if err != nil {
@@ -79,31 +78,4 @@ func list() error {
 		fmt.Println(person)
 	}
 	return nil
-}
-
-func main() {
-	(&sc.Cmds{
-		{
-			Name: "list",
-			Desc: "list: listing person",
-			Run: func(c *sc.C, args []string) error {
-				return list()
-			},
-		},
-		{
-			Name: "add",
-			Desc: "add [name] [age]: add person",
-			Run: func(c *sc.C, args []string) error {
-				if len(args) != 2 {
-					return sc.UsageError
-				}
-				name := args[0]
-				age, err := strconv.Atoi(args[1])
-				if err != nil {
-					return err
-				}
-				return add(name, age)
-			},
-		},
-	}).Run(&sc.C{})
 }
