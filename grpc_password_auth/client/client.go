@@ -15,7 +15,6 @@ type loginCreds struct {
 }
 
 func (c *loginCreds) GetRequestMetadata(context.Context, ...string) (map[string]string, error) {
-	fmt.Println("GetRequestMetadata")
 	return map[string]string{
 		"username": c.Username,
 		"password": c.Password,
@@ -48,7 +47,6 @@ func Add(c *cli.Context, name string, age int) error {
 	defer conn.Close()
 
 	client := pb.NewCustomerServiceClient(conn)
-	fmt.Printf("client: %#v\n", client)
 
 	person := &pb.Person{
 		Name: name,
