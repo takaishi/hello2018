@@ -8,8 +8,8 @@ import (
 	mrand "math/rand"
 	"crypto/sha256"
 	"strings"
-	"os"
 	"errors"
+	"log"
 )
 
 type sshTC struct {
@@ -28,29 +28,21 @@ func (tc *sshTC) randString() string {
 	return string(b)
 }
 
-func privateKeyPath() string {
-	if os.Getenv("SSH_PRIVATE_KEY_PATH") != "" {
-		return os.Getenv("SSH_PRIVATE_KEY_PATH")
-	} else {
-		return 	fmt.Sprintf("%s/.ssh/id_rsa", os.Getenv("HOME"))
-	}
-}
-
 func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
 	// サーバーから暗号化された乱数を受信
 	buf := make([]byte, 2014)
 	n, err := rawConn.Read(buf)
 	if err != nil {
-		fmt.Printf("Read error: %s\n", err)
+		log.Printf("[ERROR] Read error: %s\n", err)
 		return nil, nil, err
 	}
 
 	// 復号
-	key, err := tc.readPrivateKey(privateKeyPath())
+	key, err := tc.readPrivateKey(tc.privateKeyPath)
 
 	decrypted, err := tc.Decrypt(string(buf[:n]), key)
 	if err != nil {
-		fmt.Printf("Failed to decrypt: %s\n", err)
+		log.Printf("[ERROR] Failed to decrypt: %s\n", err)
 		return nil, nil, err
 	}
 
@@ -62,12 +54,12 @@ func (tc *sshTC) ClientHandshake(ctx context.Context, addr string, rawConn net.C
 	r := make([]byte, 64)
 	n, err = rawConn.Read(r)
 	if err != nil {
-		fmt.Printf("Read error: %s\n", err)
+		log.Printf("[ERROR] Read error: %s\n", err)
 		return nil, nil, err
 	}
 	r = r[:n]
 	if string(r) != "ok" {
-		fmt.Println("Failed to authenticate")
+		log.Println("[ERROR] Failed to authenticate")
 		return nil, nil, errors.New("Failed to authenticate")
 	}
 
@@ -100,9 +92,10 @@ func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.Au
 	// 一致していれば正しいキーペアを使用していることがわかる
 	if strings.TrimRight(string(buf[:n]), "\n") == fmt.Sprintf("%x", h) {
 		rawConn.Write([]byte("ok"))
-		fmt.Println("Success!!!")
+		log.Println("[INFO] Authenticate Success!!!")
 	} else {
 		rawConn.Write([]byte("ng"))
+		log.Println("[ERROR] Authenticate Failed...")
 		return nil, nil, errors.New(fmt.Sprintf("Failed to authenticate: invalid key"))
 	}
 
