@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"golang.org/x/net/context"
@@ -8,9 +8,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	"fmt"
 	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
 	"github.com/takaishi/hello2018/grpc_password_auth/server/auth"
+	"github.com/urfave/cli"
 )
 
 type customerService struct {
@@ -19,7 +19,6 @@ type customerService struct {
 }
 
 func (cs *customerService) ListPerson(p *pb.RequestType, stream pb.CustomerService_ListPersonServer) error {
-	fmt.Println("ListPerson")
 	cs.m.Lock()
 	defer cs.m.Unlock()
 	for _, p := range cs.customers {
@@ -31,15 +30,14 @@ func (cs *customerService) ListPerson(p *pb.RequestType, stream pb.CustomerServi
 }
 
 func (cs *customerService) AddPerson(c context.Context, p *pb.Person) (*pb.ResponseType, error) {
-	fmt.Println("AddPerson")
 	cs.m.Lock()
 	defer cs.m.Unlock()
 	cs.customers = append(cs.customers, p)
 	return new(pb.ResponseType), nil
 }
 
-func main() {
-	a := auth.NewAuthorizer("admin", "admin123")
+func Start(c *cli.Context) error {
+	a := auth.NewAuthorizer(c.GlobalString("username"), c.GlobalString("password"))
 
 	lis, err := net.Listen("tcp", ":11111")
 	if err != nil {
@@ -53,8 +51,6 @@ func main() {
 		grpc.UnaryInterceptor(a.HandleUnary),
 	)
 
-	fmt.Printf("server: %#v\n", server)
-
 	pb.RegisterCustomerServiceServer(server, new(customerService))
-	server.Serve(lis)
+	return server.Serve(lis)
 }

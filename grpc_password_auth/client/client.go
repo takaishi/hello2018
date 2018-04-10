@@ -1,12 +1,11 @@
-package main
+package client
 
 import (
 	"fmt"
 	"io"
-	"strconv"
 
-	"github.com/mattn/sc"
 	pb "github.com/takaishi/hello2018/grpc_password_auth/protocol"
+	"github.com/urfave/cli"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -16,7 +15,6 @@ type loginCreds struct {
 }
 
 func (c *loginCreds) GetRequestMetadata(context.Context, ...string) (map[string]string, error) {
-	fmt.Println("GetRequestMetadata")
 	return map[string]string{
 		"username": c.Username,
 		"password": c.Password,
@@ -27,12 +25,21 @@ func (c *loginCreds) RequireTransportSecurity() bool {
 	return false
 }
 
-func add(name string, age int) error {
+func dial(c *cli.Context) (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
-		grpc.WithPerRPCCredentials(&loginCreds{Username: "admin", Password: "admin123"}),
+		grpc.WithPerRPCCredentials(
+			&loginCreds{
+				Username: c.GlobalString("username"),
+				Password: c.GlobalString("password"),
+			},
+		),
 	}
-	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
+	return grpc.Dial("127.0.0.1:11111", opts...)
+}
+
+func Add(c *cli.Context, name string, age int) error {
+	conn, err := dial(c)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -40,7 +47,6 @@ func add(name string, age int) error {
 	defer conn.Close()
 
 	client := pb.NewCustomerServiceClient(conn)
-	fmt.Printf("client: %#v\n", client)
 
 	person := &pb.Person{
 		Name: name,
@@ -50,14 +56,8 @@ func add(name string, age int) error {
 	return err
 }
 
-func list() error {
-	conn, err := grpc.Dial("127.0.0.1:11111",
-		grpc.WithInsecure(),
-		grpc.WithPerRPCCredentials(&loginCreds{
-			Username: "admin",
-			Password: "admin123a",
-		},
-		))
+func List(c *cli.Context) error {
+	conn, err := dial(c)
 	if err != nil {
 		return err
 	}
@@ -79,31 +79,4 @@ func list() error {
 		fmt.Println(person)
 	}
 	return nil
-}
-
-func main() {
-	(&sc.Cmds{
-		{
-			Name: "list",
-			Desc: "list: listing person",
-			Run: func(c *sc.C, args []string) error {
-				return list()
-			},
-		},
-		{
-			Name: "add",
-			Desc: "add [name] [age]: add person",
-			Run: func(c *sc.C, args []string) error {
-				if len(args) != 2 {
-					return sc.UsageError
-				}
-				name := args[0]
-				age, err := strconv.Atoi(args[1])
-				if err != nil {
-					return err
-				}
-				return add(name, age)
-			},
-		},
-	}).Run(&sc.C{})
 }
