@@ -10,13 +10,17 @@ import (
 	"github.com/urfave/cli"
 )
 
-func Add(c *cli.Context, name string, age int) error {
-	sshTC := sshTC2.NewClientCreds()
+func dial(c *cli.Context) (*grpc.ClientConn, error) {
+	sshTC := sshTC2.NewClientCreds(c.String("identity-file"))
 	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
 		grpc.WithTransportCredentials(sshTC),
-		//grpc.WithBlock(),
 	}
-	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
+	return grpc.Dial("127.0.0.1:11111", opts...)
+}
+
+func Add(c *cli.Context, name string, age int) error {
+	conn, err := dial(c)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -33,13 +37,7 @@ func Add(c *cli.Context, name string, age int) error {
 }
 
 func List(c *cli.Context) error {
-	sshTC := sshTC2.NewClientCreds()
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(sshTC),
-		//grpc.WithBlock(),
-	}
-
-	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
+	conn, err := dial(c)
 	if err != nil {
 		return err
 	}

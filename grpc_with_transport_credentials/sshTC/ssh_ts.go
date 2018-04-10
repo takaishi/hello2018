@@ -125,11 +125,12 @@ func NewServerCreds(path string) credentials.TransportCredentials {
 	}
 }
 
-func NewClientCreds() credentials.TransportCredentials {
+func NewClientCreds(path string) credentials.TransportCredentials {
 	return &sshTC{
 		info: &credentials.ProtocolInfo{
 			SecurityProtocol: "ssh",
 			SecurityVersion:  "1.0",
 		},
+		privateKeyPath: path,
 	}
 }
