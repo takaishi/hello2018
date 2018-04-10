@@ -30,7 +30,7 @@ func (c *loginCreds) RequireTransportSecurity() bool {
 func add(name string, age int) error {
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
-		grpc.WithPerRPCCredentials(&loginCreds{Username: "admin",Password: "admin123",}),
+		grpc.WithPerRPCCredentials(&loginCreds{Username: "admin", Password: "admin123"}),
 	}
 	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
 	if err != nil {
