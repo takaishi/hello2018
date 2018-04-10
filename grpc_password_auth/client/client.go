@@ -26,12 +26,21 @@ func (c *loginCreds) RequireTransportSecurity() bool {
 	return false
 }
 
-func Add(c *cli.Context, name string, age int) error {
+func dial(c *cli.Context) (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
-		grpc.WithPerRPCCredentials(&loginCreds{Username: c.String("username"), Password: c.String("password")}),
+		grpc.WithPerRPCCredentials(
+			&loginCreds{
+				Username: c.String("username"),
+				Password: c.String("password"),
+			},
+		),
 	}
-	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
+	return grpc.Dial("127.0.0.1:11111", opts...)
+}
+
+func Add(c *cli.Context, name string, age int) error {
+	conn, err := dial(c)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -50,13 +59,7 @@ func Add(c *cli.Context, name string, age int) error {
 }
 
 func List(c *cli.Context) error {
-	conn, err := grpc.Dial("127.0.0.1:11111",
-		grpc.WithInsecure(),
-		grpc.WithPerRPCCredentials(&loginCreds{
-			Username: c.String("username"),
-			Password: c.String("password"),
-		},
-		))
+	conn, err := dial(c)
 	if err != nil {
 		return err
 	}
