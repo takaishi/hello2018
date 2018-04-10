@@ -41,7 +41,7 @@ func Start(c *cli.Context) {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	sshTC := sshTC.NewServerCreds()
+	sshTC := sshTC.NewServerCreds(c.String("public-key"))
 	server := grpc.NewServer(grpc.Creds(sshTC))
 	pb.RegisterCustomerServiceServer(server, new(customerService))
 	server.Serve(lis)

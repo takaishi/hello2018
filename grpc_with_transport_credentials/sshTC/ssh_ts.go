@@ -14,7 +14,8 @@ import (
 
 type sshTC struct {
 	info *credentials.ProtocolInfo
-
+	publicKeyPath string
+	privateKeyPath string
 }
 
 const rs3Letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -32,14 +33,6 @@ func privateKeyPath() string {
 		return os.Getenv("SSH_PRIVATE_KEY_PATH")
 	} else {
 		return 	fmt.Sprintf("%s/.ssh/id_rsa", os.Getenv("HOME"))
-	}
-}
-
-func publicKeyPath() string {
-	if os.Getenv("SSH_PUBLIC_KEY_PATH") != "" {
-		return os.Getenv("SSH_PUBLIC_KEY_PATH")
-	} else {
-		return 	fmt.Sprintf("%s/.ssh/id_rsa.pub", os.Getenv("HOME"))
 	}
 }
 
@@ -82,7 +75,7 @@ func (tc *sshTC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.Au
 	h := sha256.Sum256([]byte(s))
 
 	// 乱数を暗号化してクライアントに送信
-	encrypted, err := tc.Encrypt(s, publicKeyPath())
+	encrypted, err := tc.Encrypt(s, tc.publicKeyPath)
 	if err != nil {
 		return nil, nil, errors.New(fmt.Sprintf("Failed to encrypt: %s\n", err))
 	}
@@ -122,12 +115,13 @@ func (tc *sshTC) OverrideServerName(serverNameOverride string) error {
 	return nil
 }
 
-func NewServerCreds() credentials.TransportCredentials {
+func NewServerCreds(path string) credentials.TransportCredentials {
 	return &sshTC{
 		info: &credentials.ProtocolInfo{
 			SecurityProtocol: "ssh",
 			SecurityVersion: "1.0",
 		},
+		publicKeyPath: path,
 	}
 }
 
