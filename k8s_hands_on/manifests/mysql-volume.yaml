@@ -12,3 +12,4 @@ spec:
   hostPath:
     path: /tmp/data/lv-1
   persistentVolumeReclaimPolicy: Recycle
+

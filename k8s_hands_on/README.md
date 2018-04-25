@@ -141,7 +141,7 @@ mysql-pass            Opaque                                1         1s
 
 次はmysqlを起動します。Kubernetesでは、リソースの最小単位はコンテナではなくPodというものです。Podはコンテナとストレージボリュームの集合です。
 
-`./manifests/mysql-pod.yaml`として、以下のyamlを作成します。
+`./manifests/mysql-pod.yaml`という名前で、以下のyamlを作成します。
 
 ```yaml
 apiVersion: v1
@@ -201,11 +201,185 @@ mysqlのログも確認してみましょう。`kubectl logs`コマンドを使�
 Version: '5.6.40'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)
 ```
 
-`mysqld: ready for connections.`というログが見えますね！やったー！
+`mysqld: ready for connections.`というログが見えますね。さらに、mysqlクライアントから繋がるかどうかも試してみましょう。
+
+`kubectl port-forward`コマンドを使うことで、Podのポートをフォワードできます。
+
+```
+➤ kubectl port-forward wordpress-mysql 13306:3306
+Forwarding from 127.0.0.1:13306 -> 3306
+Handling connection for 13306
+```
+
+最後に、mysqlコマンドで`127.0.0.1:13306`に繋がるかチェックしてみます。パスワードはSecretとして登録したものを使います。
+
+```
+➤ mysql -s -uroot -p -h127.0.0.1 --port=13306
+Enter password:
+mysql> show databases;
+Database
+information_schema
+mysql
+performance_schema
+```
+
+つながりました！やったー！
+
+## DBのデータが永続ボリュームに保存されていない問題を解決する
+
+さて、MysqlのDBデータはPod内にあります。そのため、Podを削除するとデータが消えてしまう。これはまずいですね。もちろん解決方法があって、永続ボリューム（PersistentVolume）を使うことができます。
+
+まず、PersistentVolumeを定義します。`./manifests/mysql-volume.yaml`という名前で、以下のyamlを作成します。
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-volume-1
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /tmp/data/lv-1
+  persistentVolumeReclaimPolicy: Recycle
+```
+
+適用すると、PersistentVolumeが作成されます。
+
+```
+➤ kubectl apply -f ./manifests/mysql-volume.yaml
+persistentvolume "local-volume-1" created
+```
+
+PersistentVolume一覧を見てみましょう。local-volume-1が作成されているはずです。
+
+```
+➤ kubectl get persistentvolume
+NAME             CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM     STORAGECLASS   REASON    AGE
+local-volume-1   20Gi       RWO            Recycle          Available                                      8s
+```
+
+次に、PodがPersistentVolumeを取得できるようにします。これは、PersistentVolumeClaimというリソースを使います。
+
+`./manifests/mysql-persistent-volume-claim.yaml`という名前で、以下のyamlを作成します。
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-lv-claim
+  labels:
+    app: wordpress
+    tier: mysql
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+```
+
+`kubectl apply`コマンドでPersistentVolumeClaimを作成します。
+
+```
+➤ kubectl apply -f ./manifests/mysql-persistent-volume-claim.yaml
+```
+
+最後に、mysql PodがPersistentVolumeを使うようにマウント設定を行います。ついでにDeployment化しておきましょう。
+
+`./manifests/mysql-deployment-with-volume.yaml`という名前で、以下のyamlを作成します。
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-mysql
+  labels:
+    app: wordpress
+    tier: mysql
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: mysql
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: mysql
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-pass
+                key: password.txt
+        ports:
+          - containerPort: 3306
+            name: mysql
+        volumeMounts:
+          - name: mysql-local-storage
+            mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-local-storage
+        persistentVolumeClaim:
+          claimName: mysql-lv-claim
+```
+
+`kubectl apply`して、mysql Deploymentを作ります。
+
+```
+➤ kubectl apply -f  manifests/mysql-deployment-with-volume.yaml
+```
+
+Deploymentを作ったので、Deploymentによって作られたPodと、最初に作成したPodがいる状態です。`wordpress-mysql-cf9449df-7kfhf` がDeploymentによって作られたPodですね。
+
+```
+➤ kubectl get pod -l app=wordpress -l tier=mysql
+NAME                             READY     STATUS    RESTARTS   AGE
+wordpress-mysql                  1/1       Running   0          19m
+wordpress-mysql-cf9449df-7kfhf   1/1       Running   0          31s
+```
+
+古いwordpress-mysql Podは消しておきましょう。
+
+```
+➤ kubectl delete pod wordpress-mysql
+```
+
+Deploymentが作ったPodを見ると、Volumesにmysql-lv-claimが登録されていることがわかります。
+
+```
+➤ kubectl describe pod wordpress-mysql-cf9449df-7kfhf
+Name:           wordpress-mysql-cf9449df-7kfhf
+
+[snip]
+
+Volumes:
+  mysql-local-storage:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  mysql-lv-claim
+    ReadOnly:   false
+  default-token-v2tf5:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-v2tf5
+    Optional:    false
+
+[snip]
+```
 
 ## wordpressを起動する
 
 mysqlを起動したので、次はwordpressです。mysqlと同じように、Podを定義します。
+
+`./manifests/wordpress-pod.yaml`という名前で、以下のyamlを作成します。
 
 ```yaml
 apiVersion: v1
@@ -233,7 +407,7 @@ spec:
 `kubectl apply`します。
 
 ```
-➤ kubectl apply -f ./manifests/wordpress.yaml
+➤ kubectl apply -f ./manifests/wordpress-pod.yaml
 ```
 
 起動しているように見えますが…
@@ -259,11 +433,12 @@ MySQL Connection Error: (2002) php_network_getaddresses: getaddrinfo failed: Nam
 
 さて、環境変数でmysqlのホストを指定できることはわかりました。では、ここで必要となるのは、mysqlの接続先情報はこれだ！というのを知っている、Serviceというリソースを作ることです。Serviceを作ることで外部からディスカバリーできるようになるわけですね。
 
-mysql用Serviceの定義を書いてapplyしましょう。Serviceのspecとしては、ポート情報とどのPodにつなぐかを決めるselector、クラスターIPです。
+mysql用Serviceの定義を書きましょう。Serviceのspecとしては、ポート情報とどのPodにつなぐかを決めるselector、クラスターIPです。
+
+`./manifests/mysql-service.yaml`という名前で、以下のyamlを作成します。
 
 
 ```yaml
----
 apiVersion: v1
 kind: Service
 metadata:
@@ -280,13 +455,13 @@ spec:
   clusterIP: None
 ```
 
-
+そして、`kubectl apply`してwordpress-mysqlサービスを作成します。
 
 ```
 ➤ kubectl apply -f manifests/mysql-service.yaml
 ```
 
-
+Service一覧を見て、作成されていることを確認します。
 
 ```
 ➤ kubectl get service -l app=wordpress -l tier=mysql
@@ -294,19 +469,22 @@ NAME              TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
 wordpress-mysql   ClusterIP   None         <none>        3306/TCP   49s
 ```
 
-
-
 Serviceを作ったら、wordpress Podを一度消します。
 
-
-
 ```
-➤ kubectl delete pod/wordpress
+➤ kubectl delete pod wordpress
 ```
 
+Podが消えるまで、少し待つ必要があります。削除されたのを確認して、次に進みましょう。
 
+```
+➤ kubectl get pods -l app=wordpress -l tier=frontend
+No resources found.
+```
 
-そして、mysqlのホストとしてmysql Serviceを使うように定義を追加し、再度applyしましょう。
+mysqlのホストとしてmysql Serviceを使うように定義を追加ます。spec/containers/envに、`WORDPRESS_DB_HOST`を追加していて、値としては、wordpress-mysql Serviceの3306を指定しています。
+
+`./manifests/wordpress-pod-with-mysql-host.yaml`という名前で、以下のyamlを作成します。
 
 ```yaml
 apiVersion: v1
@@ -333,13 +511,13 @@ spec:
       name: wordpress
 ```
 
-
+`kubectl apply`して、再度Podを作成します。
 
 ```
 ➤ kubectl apply -f ./manifests/wordpress-pod-with-mysql-host.yaml
 ```
 
-
+Podが起動したら、ログを見てみましょう。先ほどとは違い、エラーがでていないことがわかります。
 
 ```
 ➤ kubectl logs wordpress | tail -n 5
@@ -350,12 +528,11 @@ AH00558: apache2: Could not reliably determine the server's fully qualified doma
 [Wed Apr 25 02:47:15.619793 2018] [core:notice] [pid 1] AH00094: Command line: 'apache2 -D FOREGROUND'
 ```
 
-
-
 これで、wordpressからwordpress-mysqlに繋がるはずです。しかし、k8sの外からwordpressに繋ぐことができません。そこで、wordpress用のサービスも作ります。mysqlとは違い、外部から接続したいので、typeとしてNodePortというものを選択しています。これは、PodのポートとNodeのポートを接続するというものです。
 
+`./manifests/wordpress-service.yaml`という名前で、以下のyamlを作成します。
+
 ```yaml
----
 apiVersion: v1
 kind: Service
 metadata:
@@ -374,13 +551,13 @@ spec:
     tier: frontend
 ```
 
-
+`kubectl apply`コマンドで、wordpress Serviceを作成します。
 
 ```
 ➤ kubectl apply -f ./manifests/wordpress-service.yaml
 ```
 
-
+サービスを見てみましょう。
 
 ```
 ➤ kubectl get service -l app=wordpress -l tier=frontend
@@ -400,6 +577,8 @@ Opening kubernetes service default/wordpress in default browser...
 ## アプリケーションがクラッシュした時、自動回復してほしい
 
 さてさて無事にwordpressが起動したのですが、このままだと例えばwordpressコンテナがクラッシュした時に繋がらなくなってしまいます。Podはコンテナとストレージボリュームの集合というだけで、自分自身を管理するということをしていないためです。そこで、Deploymentというリソースを使います。Podとして定義していた箇所を、以下のようにDeploymentにします。Deploymentのspec/template/spec部分はPodのspecと同じであることがわかりますね。
+
+`./manifests/wordpress-deployment.yaml`という名前で、以下のyamlを作成します。
 
 ```yaml
 apiVersion: apps/v1
@@ -439,7 +618,7 @@ spec:
 applyします。Deploymentによって自動的にwodpress Podが作成されることが確認できます。古いPod(wordpress)は削除しておきましょう。
 
 ```
-➤ kubectl apply -f ./manifests/wordpress.yaml
+➤ kubectl apply -f ./manifests/wordpress-deployment.yaml
 deployment "wordpress" created
 ```
 
@@ -505,93 +684,7 @@ wordpress-55448464cd-s8c7f   0/1       ContainerCreating   0          4s
 wordpress-55448464cd-t4jrj   0/1       ContainerCreating   0          4s
 ```
 
-
-## DBのデータが永続ボリュームに保存されていない問題を解決する
-
-現在、MysqlのDBデータはPod内にあります。そのため、Podを削除するとデータが消えてしまう。これはまずいですね。もちろん解決方法があって、永続ボリューム（PersistentVolume）を使うことができます。
-
-まず、PersistentVolumeを定義します。
-
-```
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: local-volume-1
-  labels:
-    type: local
-spec:
-  capacity:
-    storage: 20Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: /tmp/data/lv-1
-  persistentVolumeReclaimPolicy: Recycle
-```
-
-適用すると、PersistentVolumeが作成されます。
-
-```
-➤ kubectl apply -f ./manifests/volume.yaml
-persistentvolume "local-volume-1" created
-```
-
-mysql PodがPersistentVolumeを使うようにマウント設定などを行います。ついでにDeployment化しておきましょう。
-
-```yaml
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: wordpress-mysql
-  labels:
-    app: wordpress
-    tier: mysql
-spec:
-  selector:
-    matchLabels:
-      app: wordpress
-      tier: mysql
-  template:
-    metadata:
-      labels:
-        app: wordpress
-        tier: mysql
-    spec:
-      containers:
-      - image: mysql:5.6
-        name: mysql
-        env:
-          - name: MYSQL_ROOT_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mysql-pass
-                key: password.txt
-        ports:
-          - containerPort: 3306
-            name: mysql
-        volumeMounts:
-          - name: mysql-local-storage
-            mountPath: /var/lib/mysql
-      volumes:
-      - name: mysql-local-storage
-        persistentVolumeClaim:
-          claimName: mysql-lv-claim
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mysql-lv-claim
-  labels:
-    app: wordpress
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 20Gi
-```
-
+これで、フロントエンドとなるwordpress Podがスケールアウトできる、wordpress環境の完成です！
 
 ## まとめ
 
@@ -601,7 +694,7 @@ spec:
 * Pod
 * Service
 * Deployment
-* PersistentVolume
+* PersistentVolume / PersistentVolumeClaim
 
 ## さらにKubernetesについて知りたい？
 
