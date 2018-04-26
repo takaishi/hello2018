@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wordpress-mysql
+  labels:
+    app: wordpress
+    tier: mysql
+spec:
+  containers:
+  - image: mysql:5.6
+    name: mysql
+    env:
+      - name: MYSQL_ROOT_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: mysql-pass
+            key: password.txt
+    ports:
+      - containerPort: 3306
+        name: mysql
