@@ -1,8 +1,9 @@
 #!/bin/bash
 echo ">> START"
-sleep 30
+echo "FOO = ${FOO}"
+#sleep 30
 
-if [ ${FOO} = "false" ]; then
+if [ "${FOO}" = "false" ]; then
   echo "Failed..."
   exit 1
 fi
