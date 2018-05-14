@@ -7,4 +7,4 @@ image_resource:
 inputs:
   - name: hello
 run:
-  path: ./hello/hello.sh
+  path: ./hello/concourse-ci/hello.sh
