@@ -1,5 +1,6 @@
 #!/bin/bash
 echo ">> START"
+apt install -y curl
 FOO=$(curl -XGET ${CONSUL_HOST}:8500/v1/kv/foo)
 echo "FOO = ${FOO}"
 #sleep 30
