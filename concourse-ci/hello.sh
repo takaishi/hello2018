@@ -1,7 +1,8 @@
 #!/bin/bash
 echo ">> START"
 apk update
-apk add curl libcurl
+apk add curl
+apk add libcurl
 FOO=$(curl -XGET ${CONSUL_HOST}:8500/v1/kv/foo)
 echo "FOO = ${FOO}"
 #sleep 30
