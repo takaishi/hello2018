@@ -3,6 +3,7 @@ set -x
 
 echo ">> START"
 apk update
+apk upgrade
 apk add libcurl
 apk add curl
 FOO=$(curl -XGET ${CONSUL_HOST}:8500/v1/kv/foo)
