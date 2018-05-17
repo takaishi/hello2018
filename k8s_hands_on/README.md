@@ -574,9 +574,14 @@ Opening kubernetes service default/wordpress in default browser...
 
 これでwordpressが起動しました！ここからは、より便利な機能（といってもk8sを使うならほぼ必須ですが）を使ってみましょう。
 
-## アプリケーションがクラッシュした時、自動回復してほしい
+## アプリケーションがクラッシュした時自動回復してほしいし、新バージョンのリリース時にいい感じにPodを入れ替えたい
 
-さてさて無事にwordpressが起動したのですが、このままだと例えばwordpressコンテナがクラッシュした時に繋がらなくなってしまいます。Podはコンテナとストレージボリュームの集合というだけで、自分自身を管理するということをしていないためです。そこで、Deploymentというリソースを使います。Podとして定義していた箇所を、以下のようにDeploymentにします。Deploymentのspec/template/spec部分はPodのspecと同じであることがわかりますね。
+さてさて無事にwordpressが起動したのですが、このままだと例えばwordpressコンテナがクラッシュした時に繋がらなくなってしまいます。
+Podはコンテナとストレージボリュームの集合というだけで、自分自身を管理するということをしていないためです。
+また、新しいバージョンのイメージを使いたい、という場合にPodを入れ替えるのは大変です。
+そこで、Deploymentというバージョニングのためのリソースを使います。
+DeploymentはReplicaSetという「複数のPodを扱うためのリソースで、任意の数のPodが動いている状態を維持し続ける」を管理します(このハンズオンでは使いません)。
+Podとして定義していた箇所を、以下のようにDeploymentにします。Deploymentのspec/template/spec部分はPodのspecと同じであることがわかりますね。
 
 `./manifests/wordpress-deployment.yaml`という名前で、以下のyamlを作成します。
 
@@ -615,7 +620,7 @@ spec:
           name: wordpress
 ```
 
-applyします。Deploymentによって自動的にwodpress Podが作成されることが確認できます。古いPod(wordpress)は削除しておきましょう。
+applyします。Deploymentによって(厳密にはReplicaSetですが)自動的にwodpress Podが作成されることが確認できます。古いPod(wordpress)は削除しておきましょう。
 
 ```
 ➤ kubectl apply -f ./manifests/wordpress-deployment.yaml
@@ -630,31 +635,30 @@ NAME        DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 wordpress   1         1         1            1           5m
 ```
 
-DeploymentによってPodが自動作成されるので、それも確認しましょう。`wordpress`はPodとして作成したもので、`wordpress-55448464cd-mmq9w`がDeploymentによって自動作成されたものです。
+自動作成されたPodも確認しましょう。`wordpress`はPodとして手動作成したもので、`wordpress-55448464cd-mmq9w`が自動作成されたものです。
 
 ```
-r_takaishi@PMC02V437VHV2R:~/s/g/t/h/k8s_hands_on|k8s_hands_on⚡*?
 ➤ kubectl get pods -l app=wordpress -l tier=frontend
 NAME                         READY     STATUS    RESTARTS   AGE
 wordpress                    1/1       Running   0          18m
 wordpress-55448464cd-mmq9w   1/1       Running   0          5m
 ```
 
-DeploymentによってPodが作られる状態になったので、最初に作成したwordpress Podは消しておきましょう。
+DeploymentによってPodが管理される状態になったので、最初に作成したwordpress Podは消しておきましょう。
 
 ```
 ➤ kubectl delete po/wordpress
 pod "wordpress" deleted
 ```
 
-Deploymentは定義した状態を維持しようとします。例えば、Podを削除しても新しいPodが自動的に作成され、Podが1台動いているという状態が維持されるわけです。
+Deploymentを使ってリソースを作成した場合、定義した状態が維持されます。例えば、Podを削除しても新しいPodが自動的に作成され、Podが1台動いているという状態が維持されるわけです。
 
 ```
 ➤ kubectl delete pod wordpress-55448464cd-mmq9w
 pod "wordpress-55448464cd-mmq9w" deleted
 ```
 
-このように、Deploymentが作ったPodを消してみると、すぐに新しいPodが作成されていることがわかります。
+このように、自動作成されたPodを消してみると、すぐに新しいPodが作成されていることがわかります。
 
 ```
 ➤ kubectl get pods -l app=wordpress -l tier=frontend
