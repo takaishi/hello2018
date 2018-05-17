@@ -388,7 +388,7 @@ metadata:
   name: wordpress
   labels:
     app: wordpress
-    tier: front-end
+    tier: frontend
 spec:
   containers:
   - image: wordpress
@@ -413,7 +413,7 @@ spec:
 起動しているように見えますが…
 
 ```
-➤ kubectl get pods -l app=wordpress -l tier=front-end
+➤ kubectl get pods -l app=wordpress -l tier=frontend
 NAME        READY     STATUS    RESTARTS   AGE
 wordpress   1/1       Running   0          40s
 ```
