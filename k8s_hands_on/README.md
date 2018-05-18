@@ -11,7 +11,7 @@
   - PersistentVolume
 
 
-## k8s環境を用意する
+## 1. k8s環境を用意する
 
 まずはk8s環境が必要です。クラウド上にクラスターを作ってもよいのですが、今回は手元に用意しましょう。
 [minikube](https://github.com/kubernetes/minikube)という、1VM上にk8s環境を構築してくれるツールを使います。
@@ -96,14 +96,14 @@ NAME       STATUS    ROLES     AGE       VERSION
 minikube   Ready     <none>    1m        v1.9.4
 ```
 
-## コンテナを用いてWordpressを起動するには
+## 2. コンテナを用いてWordpressを起動するには
 
 いよいよk8s上にwordpressを作っていきます。今回は、store.docker.comにあるコンテナイメージを使います。
 
 * [mysql](https://store.docker.com/images/mysql)
 * [wordpress](https://store.docker.com/images/wordpress)
 
-## MySQL用のパスワードを機密情報としてk8sに登録する
+## 3. MySQL用のパスワードを機密情報としてk8sに登録する
 いきなりmysqlを建てるまえに、準備として機密情報を扱えるようにしておきます。
 機密情報といってもいろいろありますが、最低限必要なのはwordpressからmysqlにアクセスするためのパスワードです。
 mysqlを起動した時にパスワードを設定し、wordpressを起動したときにそのパスワードでmysqlに接続する、というやり方です。
@@ -137,9 +137,11 @@ default-token-v2tf5   kubernetes.io/service-account-token   3         7m
 mysql-pass            Opaque                                1         1s
 ```
 
-## mysqlを起動する
+## 4. mysqlを起動する
 
 次はmysqlを起動します。Kubernetesでは、リソースの最小単位はコンテナではなくPodというものです。Podはコンテナとストレージボリュームの集合です。
+
+![](./images/pod.png)
 
 `./manifests/mysql-pod.yaml`という名前で、以下のyamlを作成します。
 
@@ -225,7 +227,7 @@ performance_schema
 
 つながりました！やったー！
 
-## DBのデータが永続ボリュームに保存されていない問題を解決する
+## 5. DBのデータが永続ボリュームに保存されていない問題を解決する
 
 さて、MysqlのDBデータはPod内にあります。そのため、Podを削除するとデータが消えてしまう。これはまずいですね。もちろん解決方法があって、永続ボリューム（PersistentVolume）を使うことができます。
 
@@ -289,76 +291,67 @@ spec:
 ➤ kubectl apply -f ./manifests/mysql-persistent-volume-claim.yaml
 ```
 
-最後に、mysql PodがPersistentVolumeを使うようにマウント設定を行います。ついでにDeployment化しておきましょう。
+最後に、 `wordpress-mysql` PodがPersistentVolumeを使うようにマウント設定を行い、Podを作り直します。
+まずは `kubectl delete pod` コマンドを使って、 `wordpress-mysql` Podを削除します。
 
-`./manifests/mysql-deployment-with-volume.yaml`という名前で、以下のyamlを作成します。
+```
+➤ kubectl delete pod wordpress-mysql
+```
+
+`kubectl get pods` コマンドで、wordpress-mysqlがいなくなれば削除完了です。
+削除が終われば、`./manifests/mysql-pod-with-volume.yaml`という名前で、以下のyamlを作成します。
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
   name: wordpress-mysql
   labels:
     app: wordpress
     tier: mysql
 spec:
-  selector:
-    matchLabels:
-      app: wordpress
-      tier: mysql
-  template:
-    metadata:
-      labels:
-        app: wordpress
-        tier: mysql
-    spec:
-      containers:
-      - image: mysql:5.6
+  containers:
+  - image: mysql:5.6
+    name: mysql
+    env:
+      - name: MYSQL_ROOT_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: mysql-pass
+            key: password.txt
+    ports:
+      - containerPort: 3306
         name: mysql
-        env:
-          - name: MYSQL_ROOT_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mysql-pass
-                key: password.txt
-        ports:
-          - containerPort: 3306
-            name: mysql
-        volumeMounts:
-          - name: mysql-local-storage
-            mountPath: /var/lib/mysql
-      volumes:
+    volumeMounts:
       - name: mysql-local-storage
-        persistentVolumeClaim:
-          claimName: mysql-lv-claim
+        mountPath: /var/lib/mysql
+  volumes:
+  - name: mysql-local-storage
+    persistentVolumeClaim:
+      claimName: mysql-lv-claim
 ```
 
-`kubectl apply`して、mysql Deploymentを作ります。
+`kubectl apply`して、`wordpress-mysql` Podを作ります。
 
 ```
-➤ kubectl apply -f  manifests/mysql-deployment-with-volume.yaml
+➤ kubectl apply -f  manifests/mysql-pod-with-volume.yaml
 ```
 
-Deploymentを作ったので、Deploymentによって作られたPodと、最初に作成したPodがいる状態です。`wordpress-mysql-cf9449df-7kfhf` がDeploymentによって作られたPodですね。
+再度、`wordpress-mysql` Podが作成されました。
 
 ```
-➤ kubectl get pod -l app=wordpress -l tier=mysql
-NAME                             READY     STATUS    RESTARTS   AGE
-wordpress-mysql                  1/1       Running   0          19m
-wordpress-mysql-cf9449df-7kfhf   1/1       Running   0          31s
+➤ kubectl get pods
+NAME              READY     STATUS    RESTARTS   AGE
+wordpress-mysql   1/1       Running   0          2s
 ```
 
-古いwordpress-mysql Podは消しておきましょう。
+Podの詳細を見ると、Volumesにmysql-lv-claimが登録されていることがわかります。
 
 ```
-➤ kubectl delete pod wordpress-mysql
-```
-
-Deploymentが作ったPodを見ると、Volumesにmysql-lv-claimが登録されていることがわかります。
-
-```
-➤ kubectl describe pod wordpress-mysql-cf9449df-7kfhf
-Name:           wordpress-mysql-cf9449df-7kfhf
+➤ kubectl describe pod wordpress-mysql
+Name:         wordpress-mysql
+Namespace:    default
+Node:         minikube/192.168.99.100
 
 [snip]
 
@@ -375,7 +368,7 @@ Volumes:
 [snip]
 ```
 
-## wordpressを起動する
+## 6. wordpressを起動する
 
 mysqlを起動したので、次はwordpressです。mysqlと同じように、Podを定義します。
 
@@ -391,7 +384,7 @@ metadata:
     tier: frontend
 spec:
   containers:
-  - image: wordpress
+  - image: wordpress:4.9.5-php7.2-fpm-alpine
     name: wordpress
     env:
     - name: WORDPRESS_DB_PASSWORD
@@ -496,7 +489,7 @@ metadata:
     tier: frontend
 spec:
   containers:
-  - image: wordpress
+  - image: wordpress:4.9.5-php7.2-fpm-alpine
     name: wordpress
     env:
     - name: WORDPRESS_DB_HOST
@@ -574,13 +567,16 @@ Opening kubernetes service default/wordpress in default browser...
 
 これでwordpressが起動しました！ここからは、より便利な機能（といってもk8sを使うならほぼ必須ですが）を使ってみましょう。
 
-## アプリケーションがクラッシュした時自動回復してほしいし、新バージョンのリリース時にいい感じにPodを入れ替えたい
+## 7. アプリケーションがクラッシュした時自動回復してほしいし、新バージョンのリリース時にいい感じにPodを入れ替えたい
 
 さてさて無事にwordpressが起動したのですが、このままだと例えばwordpressコンテナがクラッシュした時に繋がらなくなってしまいます。
 Podはコンテナとストレージボリュームの集合というだけで、自分自身を管理するということをしていないためです。
 また、新しいバージョンのイメージを使いたい、という場合にPodを入れ替えるのは大変です。
 そこで、Deploymentというバージョニングのためのリソースを使います。
 DeploymentはReplicaSetという「複数のPodを扱うためのリソースで、任意の数のPodが動いている状態を維持し続ける」を管理します(このハンズオンでは使いません)。
+
+![](./images/deployment.png)
+
 Podとして定義していた箇所を、以下のようにDeploymentにします。Deploymentのspec/template/spec部分はPodのspecと同じであることがわかりますね。
 
 `./manifests/wordpress-deployment.yaml`という名前で、以下のyamlを作成します。
@@ -605,7 +601,7 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: wordpress
+      - image: wordpress:4.9.5-php7.2-fpm-alpine
         name: wordpress
         env:
         - name: WORDPRESS_DB_HOST
@@ -690,7 +686,7 @@ wordpress-55448464cd-t4jrj   0/1       ContainerCreating   0          4s
 
 これで、フロントエンドとなるwordpress Podがスケールアウトできる、wordpress環境の完成です！
 
-## まとめ
+## 8. まとめ
 
 以下の5リソースを使ってwordpress環境を作ってきました。k8sはyaml形式の定義が長くて難しい、という話も聞きますが、1つ1つ分解するとリソースを組み合わせているということがわかります。
 
@@ -700,7 +696,7 @@ wordpress-55448464cd-t4jrj   0/1       ContainerCreating   0          4s
 * Deployment
 * PersistentVolume / PersistentVolumeClaim
 
-## さらにKubernetesについて知りたい？
+## 9. さらにKubernetesについて知りたい？
 
 - https://kubernetes.io
 - [O'Reilly Japan - 入門 Kubernetes](https://www.oreilly.co.jp/books/9784873118406/)
