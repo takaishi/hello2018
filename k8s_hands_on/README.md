@@ -391,7 +391,7 @@ metadata:
     tier: frontend
 spec:
   containers:
-  - image: wordpress
+  - image: wordpress:4.9.5-php7.2-fpm-alpine
     name: wordpress
     env:
     - name: WORDPRESS_DB_PASSWORD
@@ -496,7 +496,7 @@ metadata:
     tier: frontend
 spec:
   containers:
-  - image: wordpress
+  - image: wordpress:4.9.5-php7.2-fpm-alpine
     name: wordpress
     env:
     - name: WORDPRESS_DB_HOST
@@ -605,7 +605,7 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: wordpress
+      - image: wordpress:4.9.5-php7.2-fpm-alpine
         name: wordpress
         env:
         - name: WORDPRESS_DB_HOST
