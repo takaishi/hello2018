@@ -141,6 +141,8 @@ mysql-pass            Opaque                                1         1s
 
 次はmysqlを起動します。Kubernetesでは、リソースの最小単位はコンテナではなくPodというものです。Podはコンテナとストレージボリュームの集合です。
 
+![](./images/pod.png)
+
 `./manifests/mysql-pod.yaml`という名前で、以下のyamlを作成します。
 
 ```yaml
