@@ -289,76 +289,67 @@ spec:
 ➤ kubectl apply -f ./manifests/mysql-persistent-volume-claim.yaml
 ```
 
-最後に、mysql PodがPersistentVolumeを使うようにマウント設定を行います。ついでにDeployment化しておきましょう。
+最後に、 `wordpress-mysql` PodがPersistentVolumeを使うようにマウント設定を行い、Podを作り直します。
+まずは `kubectl delete pod` コマンドを使って、 `wordpress-mysql` Podを削除します。
 
-`./manifests/mysql-deployment-with-volume.yaml`という名前で、以下のyamlを作成します。
+```
+➤ kubectl delete pod wordpress-mysql
+```
+
+`kubectl get pods` コマンドで、wordpress-mysqlがいなくなれば削除完了です。
+削除が終われば、`./manifests/mysql-pod-with-volume.yaml`という名前で、以下のyamlを作成します。
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
   name: wordpress-mysql
   labels:
     app: wordpress
     tier: mysql
 spec:
-  selector:
-    matchLabels:
-      app: wordpress
-      tier: mysql
-  template:
-    metadata:
-      labels:
-        app: wordpress
-        tier: mysql
-    spec:
-      containers:
-      - image: mysql:5.6
+  containers:
+  - image: mysql:5.6
+    name: mysql
+    env:
+      - name: MYSQL_ROOT_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: mysql-pass
+            key: password.txt
+    ports:
+      - containerPort: 3306
         name: mysql
-        env:
-          - name: MYSQL_ROOT_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mysql-pass
-                key: password.txt
-        ports:
-          - containerPort: 3306
-            name: mysql
-        volumeMounts:
-          - name: mysql-local-storage
-            mountPath: /var/lib/mysql
-      volumes:
+    volumeMounts:
       - name: mysql-local-storage
-        persistentVolumeClaim:
-          claimName: mysql-lv-claim
+        mountPath: /var/lib/mysql
+  volumes:
+  - name: mysql-local-storage
+    persistentVolumeClaim:
+      claimName: mysql-lv-claim
 ```
 
-`kubectl apply`して、mysql Deploymentを作ります。
+`kubectl apply`して、`wordpress-mysql` Podを作ります。
 
 ```
-➤ kubectl apply -f  manifests/mysql-deployment-with-volume.yaml
+➤ kubectl apply -f  manifests/mysql-pod-with-volume.yaml
 ```
 
-Deploymentを作ったので、Deploymentによって作られたPodと、最初に作成したPodがいる状態です。`wordpress-mysql-cf9449df-7kfhf` がDeploymentによって作られたPodですね。
+再度、`wordpress-mysql` Podが作成されました。
 
 ```
-➤ kubectl get pod -l app=wordpress -l tier=mysql
-NAME                             READY     STATUS    RESTARTS   AGE
-wordpress-mysql                  1/1       Running   0          19m
-wordpress-mysql-cf9449df-7kfhf   1/1       Running   0          31s
+➤ kubectl get pods
+NAME              READY     STATUS    RESTARTS   AGE
+wordpress-mysql   1/1       Running   0          2s
 ```
 
-古いwordpress-mysql Podは消しておきましょう。
+Podの詳細を見ると、Volumesにmysql-lv-claimが登録されていることがわかります。
 
 ```
-➤ kubectl delete pod wordpress-mysql
-```
-
-Deploymentが作ったPodを見ると、Volumesにmysql-lv-claimが登録されていることがわかります。
-
-```
-➤ kubectl describe pod wordpress-mysql-cf9449df-7kfhf
-Name:           wordpress-mysql-cf9449df-7kfhf
+➤ kubectl describe pod wordpress-mysql
+Name:         wordpress-mysql
+Namespace:    default
+Node:         minikube/192.168.99.100
 
 [snip]
 
