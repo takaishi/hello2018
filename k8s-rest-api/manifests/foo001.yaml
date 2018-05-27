@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: foo001
+  labels:
+    name: staging
+    service: hoge
