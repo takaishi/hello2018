@@ -601,7 +601,7 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: wordpress:4.9.5-php7.2-fpm-alpine
+      - image: wordpress
         name: wordpress
         env:
         - name: WORDPRESS_DB_HOST
