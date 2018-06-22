@@ -1,0 +1,37 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+        prometheus.io/path: /metrics
+    spec:
+      containers:
+        - image: prom/prometheus:v2.3.1
+          name: prometheus
+          args: [ "--storage.tsdb.path=/prometheus-data", "--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.no-lockfile" ]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+            - name: prometheus-persistent-storage
+              mountPath: /prometheus-data
+      volumes:
+        - name: config
+          configMap:
+            name: prometheus
+        - name: prometheus-persistent-storage
+          persistentVolumeClaim:
+            claimName: prometheus-pvc
+

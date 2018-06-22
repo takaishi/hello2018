@@ -1,0 +1,50 @@
+# Copyright (c) 2016 Kazumasa Kohtaka. All rights reserved.
+# This file is available under the MIT license.
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+      role: master
+  template:
+    metadata:
+      name: grafana
+      labels:
+        app: grafana
+        role: master
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:4.0.1
+        env:
+        - name: GF_AUTH_BASIC_ENABLED
+          value: 'false'
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: 'true'
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: Admin
+        - name: GF_PATHS_DATA
+          value: /mnt/data
+        - name: GF_PATHS_LOG
+          value: /mnt/log
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - name: data-volume
+          mountPath: /mnt/data/
+        - name: log-volume
+          mountPath: /mnt/log/
+        resources:
+          requests:
+            cpu: '100m'
+            memory: '250Mi'
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+      - name: log-volume
+        emptyDir: {}
