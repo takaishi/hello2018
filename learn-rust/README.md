@@ -8,6 +8,7 @@
 
 ## 第2章 Rustツアー
 
-### Rustのインストール
+* 今回は`brew install rust`でインストールした
+* Result型便利そう
+* 
 
-今回は`brew install rust`でインストールした
