@@ -1,0 +1,4 @@
+[[package]]
+name = "euclidean_algorithm"
+version = "0.1.0"
+
