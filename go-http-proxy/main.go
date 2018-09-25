@@ -26,17 +26,10 @@ func PrintHTTP(conn *HttpConnection) {
 	for k, v := range conn.Response.Header {
 		fmt.Println(k, ":", v)
 	}
-	fmt.Println(conn.Response.Body)
+	var body []byte
+	conn.Request.Body.Read(body)
+	fmt.Printf("Body: %v\n", body)
 	fmt.Println("=========================================")
-}
-
-func HandleHTTP() {
-	for {
-		select {
-		case conn := <-connChannel:
-			PrintHTTP(conn)
-		}
-	}
 }
 
 type Proxy struct {
@@ -50,6 +43,10 @@ func (p *Proxy) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 	var err error
 	var req *http.Request
 	client := &http.Client{}
+	var body []byte
+	r.Body.Read(body)
+	fmt.Printf("%v\n", body)
+	fmt.Printf("Body: %v\n", body)
 	req, err = http.NewRequest(r.Method, fmt.Sprintf("http://127.0.0.1:8000%s", r.RequestURI), r.Body)
 	for name, value := range r.Header {
 		req.Header.Set(name, value[0])
