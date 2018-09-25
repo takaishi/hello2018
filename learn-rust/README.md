@@ -22,3 +22,11 @@ $ time ./target/debug/mandelbrot mandel.png 1000x750 -1.20,0.35 -1,0.20
 Hello, world!
         8.80 real         8.78 user         0.00 sys
 ```
+
+並列化した場合：
+
+```
+$ time ./target/debug/mandelbrot mandel.png 1000x750 -1.20,0.35 -1,0.20
+Hello, world!
+        3.15 real         8.99 user         0.01 sys
+```
