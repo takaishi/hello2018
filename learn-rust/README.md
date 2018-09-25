@@ -30,3 +30,10 @@ $ time ./target/debug/mandelbrot mandel.png 1000x750 -1.20,0.35 -1,0.20
 Hello, world!
         3.15 real         8.99 user         0.01 sys
 ```
+
+## 第3章 基本的な型
+
+- Rustの型の目的（安全性/効率性/簡潔性）
+- 暗黙の型変換がない
+
+
