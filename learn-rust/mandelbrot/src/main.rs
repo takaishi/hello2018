@@ -1,7 +1,12 @@
 extern crate num;
+extern crate image;
 
 use std::str::FromStr;
 use num::Complex;
+
+use image::ColorType;
+use image::png::PNGEncoder;
+use std::fs::File;
 
 fn main() {
     println!("Hello, world!");
@@ -62,7 +67,7 @@ fn render(pixels: &mut [u8],
 
     for row in 0.. bounds.1 {
         for column in 0..bounds.0 {
-            let point = pixel_to_point(bounds, (colomn, row), upper_left, lower_right);
+            let point = pixel_to_point(bounds, (column, row), upper_left, lower_right);
 
             pixels[row * bounds.0 + column] =
                 match escape_time(point, 255) {
@@ -72,6 +77,17 @@ fn render(pixels: &mut [u8],
         }
     }
 }
+
+
+fn write_image(filename: &str, pixels: &[u8], bounds: (usize, usize)) -> Result<(), std::io::Error> {
+    let output = File::create(filename)?;
+
+    let encoder = PNGEncoder::new(output);
+    encoder.encode(&pixels, bounds.0 as u32, bounds.1 as u32, ColorType::Gray(8))?;
+
+    Ok(())
+}
+
 
 
 #[test]
