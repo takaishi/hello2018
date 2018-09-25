@@ -14,3 +14,11 @@
 * Result型便利そう
 * 
 
+
+並列化しない場合：
+
+``
+$ time ./target/debug/mandelbrot mandel.png 1000x750 -1.20,0.35 -1,0.20
+Hello, world!
+        8.80 real         8.78 user         0.00 sys
+```
