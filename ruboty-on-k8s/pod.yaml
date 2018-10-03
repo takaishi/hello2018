@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ruboty
+spec:
+  containers:
+  - name: ruboty
+    image: ruboty:latest
+    imagePullPolicy: IfNotPresent
+    env:
+      - name: SLACK_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: ruboty
+            key: slack_token.txt
