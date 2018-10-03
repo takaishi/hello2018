@@ -9,15 +9,6 @@ import (
 	"strings"
 )
 
-type HttpConnection struct {
-	Request  *http.Request
-	Response *http.Response
-}
-
-//type HttpConnectionChannel chan *HttpConnection
-
-//var connChannel = make(HttpConnectionChannel)
-
 type Proxy struct {
 }
 
@@ -51,13 +42,6 @@ func (p *Proxy) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = &HttpConnection{r, resp}
-
-	for k, v := range resp.Header {
-		wr.Header().Set(k, v[0])
-	}
-
-	wr.WriteHeader(resp.StatusCode)
 	io.Copy(wr, resp.Body)
 	resp.Body.Close()
 
@@ -65,8 +49,5 @@ func (p *Proxy) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 
 func main() {
 	proxy := NewProxy()
-	err := http.ListenAndServe(":12345", proxy)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err.Error())
-	}
+	log.Fatal(http.ListenAndServe(":12345", proxy))
 }
