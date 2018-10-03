@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 )
 
 type Proxy struct {
@@ -20,6 +19,7 @@ func (p *Proxy) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 	var req *http.Request
 	client := &http.Client{}
 
+
 	fmt.Printf("> %v %v\n", r.Method, r.RequestURI)
 	for k, v := range r.Header {
 		fmt.Printf("> %s: %s\n", k, v)
@@ -30,7 +30,9 @@ func (p *Proxy) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 	body := bufBody.String()
 	fmt.Printf("> Body: %v\n", body)
 	fmt.Printf("\n")
-	req, err = http.NewRequest(r.Method, fmt.Sprintf("http://127.0.0.1:8000%s", r.RequestURI), strings.NewReader(body))
+
+
+	req, err = http.NewRequest(r.Method, fmt.Sprintf("http://127.0.0.1:8000%s", r.RequestURI), bytes.NewReader(bufBody.Bytes()))
 	for name, value := range r.Header {
 		req.Header.Set(name, value[0])
 	}
