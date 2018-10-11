@@ -10,6 +10,7 @@ import (
 	pb "github.com/takaishi/hello2018/grpc_with_record_crypt/protocol"
 	"github.com/urfave/cli"
 	"sync"
+	"github.com/takaishi/hello2018/grpc_with_record_crypt/tc"
 )
 
 type helloService struct {
@@ -32,7 +33,8 @@ func StartServer(c *cli.Context) error {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	server := grpc.NewServer()
+	tc := tc.NewServerCreds()
+	server := grpc.NewServer(grpc.Creds(tc))
 
 	pb.RegisterHelloServiceServer(server, new(helloService))
 	return server.Serve(lis)

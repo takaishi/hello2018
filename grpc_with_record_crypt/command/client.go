@@ -6,11 +6,13 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"log"
+	"github.com/takaishi/hello2018/grpc_with_record_crypt/tc"
 )
 
 func StartClient(c *cli.Context) error {
+	tc := tc.NewClientCreds()
 	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(tc),
 	}
 	conn, err := grpc.Dial("127.0.0.1:11111", opts...)
 
