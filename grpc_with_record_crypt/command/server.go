@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/takaishi/hello2018/grpc_with_record_crypt/protocol"
+	"github.com/takaishi/hello2018/grpc_with_record_crypt/tc"
 	"github.com/urfave/cli"
 	"sync"
-	"github.com/takaishi/hello2018/grpc_with_record_crypt/tc"
 )
 
 type helloService struct {

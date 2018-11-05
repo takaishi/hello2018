@@ -2,11 +2,11 @@ package command
 
 import (
 	pb "github.com/takaishi/hello2018/grpc_with_record_crypt/protocol"
+	"github.com/takaishi/hello2018/grpc_with_record_crypt/tc"
 	"github.com/urfave/cli"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"log"
-	"github.com/takaishi/hello2018/grpc_with_record_crypt/tc"
 )
 
 func StartClient(c *cli.Context) error {
@@ -28,6 +28,9 @@ func StartClient(c *cli.Context) error {
 	}
 
 	resp, err := client.Send(context.Background(), req)
+	if err != nil {
+		return err
+	}
 	log.Printf("resp = %s\n", resp.Msg)
 
 	return err
