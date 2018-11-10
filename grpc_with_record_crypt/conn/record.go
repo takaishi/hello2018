@@ -20,7 +20,6 @@ type RecordCrypt interface {
 type HelloRecordCrypt struct{}
 
 func (hrc *HelloRecordCrypt) Encrypt(dst, plainText []byte) ([]byte, error) {
-	//log.Printf("[DEBUG] Encrypt| plainText = %+v\n", plainText)
 	block, err := aes.NewCipher(aes256key())
 	if err != nil {
 		return nil, err
@@ -34,15 +33,10 @@ func (hrc *HelloRecordCrypt) Encrypt(dst, plainText []byte) ([]byte, error) {
 
 	encryptStream := cipher.NewCTR(block, iv)
 	encryptStream.XORKeyStream(dst[aes.BlockSize:], plainText)
-	//log.Printf("[DEBUG] Encrypt| cipherText = %+v\n", dst)
-	//copy(dst, cipherText)
-	//log.Printf("[DEBUG] Encrypt| dst = %+v\n", dst)
-
 	return dst, nil
 }
 
 func (hrc *HelloRecordCrypt) Decrypt(dst, cipherText []byte) ([]byte, error) {
-	//log.Printf("[DEBUG] Decrypt| cipherText = %v\n", cipherText)
 	block, err := aes.NewCipher(aes256key())
 	if err != nil {
 		return nil, err
@@ -51,9 +45,5 @@ func (hrc *HelloRecordCrypt) Decrypt(dst, cipherText []byte) ([]byte, error) {
 	decryptedText := make([]byte, len(cipherText[aes.BlockSize:]))
 	decryptStream := cipher.NewCTR(block, cipherText[:aes.BlockSize])
 	decryptStream.XORKeyStream(decryptedText, cipherText[aes.BlockSize:])
-	//log.Printf("[DEBUG] Decrypt| decryptedText = %v\n", decryptedText)
-
-	//copy(dst, decryptedText)
-
 	return decryptedText, nil
 }
