@@ -10,7 +10,7 @@ import (
 )
 
 func StartClient(c *cli.Context, secure bool) error {
-	tc := tc.NewClientCreds()
+	tc := tc.NewClientCreds(secure)
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(tc),
 	}

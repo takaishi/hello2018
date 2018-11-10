@@ -33,7 +33,7 @@ func StartServer(c *cli.Context, secure bool) error {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	tc := tc.NewServerCreds()
+	tc := tc.NewServerCreds(secure)
 	server := grpc.NewServer(grpc.Creds(tc))
 
 	pb.RegisterHelloServiceServer(server, new(helloService))

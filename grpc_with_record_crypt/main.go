@@ -31,22 +31,29 @@ func main() {
 	log.SetOutput(logOutput())
 
 	app := cli.NewApp()
-	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name: "secure",
-		},
-	}
 	app.Commands = []cli.Command{
 		{
 			Name: "server",
 			Action: func(c *cli.Context) error {
 				return command.StartServer(c, c.Bool("secure"))
 			},
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:   "secure",
+					Hidden: false,
+				},
+			},
 		},
 		{
 			Name: "client",
 			Action: func(c *cli.Context) error {
 				return command.StartClient(c, c.Bool("secure"))
+			},
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:   "secure",
+					Hidden: false,
+				},
 			},
 		},
 	}

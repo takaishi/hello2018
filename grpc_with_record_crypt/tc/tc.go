@@ -26,11 +26,16 @@ func (tc *TC) ClientHandshake(ctx context.Context, addr string, rawConn net.Conn
 }
 
 func (tc *TC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
-	conn, err := conn.NewConn(rawConn)
+	var c net.Conn
+	if tc.secure {
+		c, err = conn.NewSecureConn(rawConn)
+	} else {
+		c, err = conn.NewConn(rawConn)
+	}
 	if err != nil {
 		return nil, nil, err
 	}
-	return conn, nil, err
+	return c, nil, err
 }
 
 func (tc *TC) Info() credentials.ProtocolInfo {
