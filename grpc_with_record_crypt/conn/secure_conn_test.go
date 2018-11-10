@@ -26,24 +26,23 @@ func (c *testConn) Close() error {
 	return nil
 }
 
-func newTestRecordConn(in, out *bytes.Buffer) *conn {
+func newTestRecordSecureConn(in, out *bytes.Buffer) *secureConn {
 	tc := testConn{
 		in:  in,
 		out: out,
 	}
-	fmt.Printf("tc: %+v\n", tc)
-	c, err := NewConn(&tc)
+	c, err := NewSecureConn(&tc)
 	if err != nil {
 		panic(fmt.Sprintf("Unexpected error creating test record connection: %v", err))
 	}
-	return c.(*conn)
+	return c.(*secureConn)
 }
 
-func newConnPair() (client, server *conn) {
+func newConnPair() (client, server *secureConn) {
 	clientBuf := new(bytes.Buffer)
 	serverBuf := new(bytes.Buffer)
-	clientConn := newTestRecordConn(clientBuf, serverBuf)
-	serverConn := newTestRecordConn(serverBuf, clientBuf)
+	clientConn := newTestRecordSecureConn(clientBuf, serverBuf)
+	serverConn := newTestRecordSecureConn(serverBuf, clientBuf)
 	return clientConn, serverConn
 }
 

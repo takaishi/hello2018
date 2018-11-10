@@ -27,7 +27,7 @@ func (hs *helloService) Send(c context.Context, req *pb.Request) (*pb.Response, 
 	return resp, nil
 }
 
-func StartServer(c *cli.Context) error {
+func StartServer(c *cli.Context, secure bool) error {
 	lis, err := net.Listen("tcp", "127.0.0.1:11111")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

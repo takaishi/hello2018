@@ -8,15 +8,21 @@ import (
 )
 
 type TC struct {
-	info *credentials.ProtocolInfo
+	info   *credentials.ProtocolInfo
+	secure bool
 }
 
 func (tc *TC) ClientHandshake(ctx context.Context, addr string, rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
-	conn, err := conn.NewConn(rawConn)
+	var c net.Conn
+	if tc.secure {
+		c, err = conn.NewSecureConn(rawConn)
+	} else {
+		c, err = conn.NewConn(rawConn)
+	}
 	if err != nil {
 		return nil, nil, err
 	}
-	return conn, nil, err
+	return c, nil, err
 }
 
 func (tc *TC) ServerHandshake(rawConn net.Conn) (_ net.Conn, _ credentials.AuthInfo, err error) {
@@ -42,20 +48,22 @@ func (tc *TC) OverrideServerName(serverNameOverride string) error {
 	return nil
 }
 
-func NewServerCreds() credentials.TransportCredentials {
+func NewServerCreds(secure bool) credentials.TransportCredentials {
 	return &TC{
 		info: &credentials.ProtocolInfo{
 			SecurityProtocol: "test",
 			SecurityVersion:  "1.0",
 		},
+		secure: secure,
 	}
 }
 
-func NewClientCreds() credentials.TransportCredentials {
+func NewClientCreds(secure bool) credentials.TransportCredentials {
 	return &TC{
 		info: &credentials.ProtocolInfo{
 			SecurityProtocol: "test",
 			SecurityVersion:  "1.0",
 		},
+		secure: secure,
 	}
 }

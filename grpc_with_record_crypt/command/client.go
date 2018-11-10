@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-func StartClient(c *cli.Context) error {
+func StartClient(c *cli.Context, secure bool) error {
 	tc := tc.NewClientCreds()
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(tc),
