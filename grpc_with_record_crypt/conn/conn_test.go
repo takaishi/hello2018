@@ -3,32 +3,51 @@ package conn
 import (
 	"bytes"
 	"fmt"
+	"net"
 	"reflect"
 	"testing"
 )
 
-func newTestRecordSecureConn(in, out *bytes.Buffer) *secureConn {
+type testConn struct {
+	net.Conn
+	in  *bytes.Buffer
+	out *bytes.Buffer
+}
+
+func (c *testConn) Read(b []byte) (n int, err error) {
+	return c.in.Read(b)
+}
+
+func (c *testConn) Write(b []byte) (n int, err error) {
+	return c.out.Write(b)
+}
+
+func (c *testConn) Close() error {
+	return nil
+}
+
+func newTestRecordConn(in, out *bytes.Buffer) *conn {
 	tc := testConn{
 		in:  in,
 		out: out,
 	}
-	c, err := NewSecureConn(&tc)
+	c, err := NewConn(&tc)
 	if err != nil {
 		panic(fmt.Sprintf("Unexpected error creating test record connection: %v", err))
 	}
-	return c.(*secureConn)
+	return c.(*conn)
 }
 
-func newSecureConnPair() (client, server *secureConn) {
+func newConnPair() (client, server *conn) {
 	clientBuf := new(bytes.Buffer)
 	serverBuf := new(bytes.Buffer)
-	clientConn := newTestRecordSecureConn(clientBuf, serverBuf)
-	serverConn := newTestRecordSecureConn(serverBuf, clientBuf)
+	clientConn := newTestRecordConn(clientBuf, serverBuf)
+	serverConn := newTestRecordConn(serverBuf, clientBuf)
 	return clientConn, serverConn
 }
 
-func TestPingPongSecure(t *testing.T) {
-	clientConn, serverConn := newSecureConnPair()
+func TestPingPong(t *testing.T) {
+	clientConn, serverConn := newConnPair()
 	fmt.Printf("clientConn: %+v\n", clientConn)
 
 	clientMsg := []byte("Client Message")
