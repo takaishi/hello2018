@@ -62,7 +62,7 @@ func TestPingPong(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(clientMsg, rcvClientMsg) {
-		t.Fatalf("Cleint Write()/Server Read() = %v, want %v", rcvClientMsg, clientMsg)
+		t.Fatalf("Client Write()/Server Read() = %v, want %v", rcvClientMsg, clientMsg)
 
 	}
 
