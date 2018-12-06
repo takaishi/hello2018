@@ -17,11 +17,7 @@ $ minikube start --memory=8192 --cpus=4 \
 
 CustomResourceは独自に作ったPodのようなリソースのこと。CustomResourceDefinition(CDR)を使って作成する。
 
-
-
 * [Extend the Kubernetes API with CustomResourceDefinitions](https://v1-12.docs.kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/)
-
-
 
 ## Custom Controller
 
@@ -39,11 +35,12 @@ CustomResourceは独自に作ったPodのようなリソースのこと。Custom
     * 名前とレプリカ数を指定できる
   * client-goライブラリを使っている
 
-
-
 ## sample-controllerを素朴に実装してみる
 
-
+* [kubernetes/code-generator](https://github.com/kubernetes/code-generator)
+* [Extending Kubernetes: Create Controllers for Core and Custom Resources](https://medium.com/@trstringer/create-kubernetes-controllers-for-core-and-custom-resources-62fc35ad64a3)
+  * コントローラのイベントフロー解説
+  * 
 
 
 
