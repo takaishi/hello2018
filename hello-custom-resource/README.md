@@ -40,7 +40,36 @@ CustomResourceは独自に作ったPodのようなリソースのこと。Custom
 * [kubernetes/code-generator](https://github.com/kubernetes/code-generator)
 * [Extending Kubernetes: Create Controllers for Core and Custom Resources](https://medium.com/@trstringer/create-kubernetes-controllers-for-core-and-custom-resources-62fc35ad64a3)
   * コントローラのイベントフロー解説
-  * 
+* [KubernetesのCustom Resource Definition(CRD)とCustom Controller](https://www.sambaiz.net/article/182/)
+
+
+
+```
+$ env GO111MODULE=off bash ~/src/k8s.io/code-generator/generate-groups.sh all github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/apis foo:v1alpha
+Generating deepcopy funcs
+Generating clientset for foo:v1alpha at github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/clientset
+Generating listers for foo:v1alpha at github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/listers
+Generating informers for foo:v1alpha at github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/informers
+```
+
+
+
+```
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/clientset.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/doc.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/fake/clientset_generated.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/fake/doc.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/fake/register.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/scheme/doc.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/scheme/register.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/doc.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/fake/doc.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/fake/fake_foo_client.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/foo_client.go
+? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/generated_expansion.go
+```
+
+
 
 
 
