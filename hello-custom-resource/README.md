@@ -41,6 +41,7 @@ CustomResourceは独自に作ったPodのようなリソースのこと。Custom
 * [Extending Kubernetes: Create Controllers for Core and Custom Resources](https://medium.com/@trstringer/create-kubernetes-controllers-for-core-and-custom-resources-62fc35ad64a3)
   * コントローラのイベントフロー解説
 * [KubernetesのCustom Resource Definition(CRD)とCustom Controller](https://www.sambaiz.net/article/182/)
+* [Kubernetes Deep Dive: Code Generation for CustomResources](https://blog.openshift.com/kubernetes-deep-dive-code-generation-customresources/)
 
 
 
@@ -67,6 +68,15 @@ Generating informers for foo:v1alpha at github.com/takaishi/hello2018/hello-cust
 ? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/fake/fake_foo_client.go
 ? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/foo_client.go
 ? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/generated_expansion.go
+```
+
+
+
+```
+cd my-sample-controller
+env GO111MODULE=off OOS=linux GOARCH=amd64 go build -o controller-main main.go
+docker build . -t rtakaishi/sample-controller-main
+docker push rtakaishi/sample-controller-main:latest
 ```
 
 
