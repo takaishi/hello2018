@@ -20,8 +20,8 @@ package fake
 
 import (
 	clientset "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned"
-	foov1alpha "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha"
-	fakefoov1alpha "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/fake"
+	samplecontrollerv1alpha "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha"
+	fakesamplecontrollerv1alpha "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -71,12 +71,12 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
-// FooV1alpha retrieves the FooV1alphaClient
-func (c *Clientset) FooV1alpha() foov1alpha.FooV1alphaInterface {
-	return &fakefoov1alpha.FakeFooV1alpha{Fake: &c.Fake}
+// SamplecontrollerV1alpha retrieves the SamplecontrollerV1alphaClient
+func (c *Clientset) SamplecontrollerV1alpha() samplecontrollerv1alpha.SamplecontrollerV1alphaInterface {
+	return &fakesamplecontrollerv1alpha.FakeSamplecontrollerV1alpha{Fake: &c.Fake}
 }
 
-// Foo retrieves the FooV1alphaClient
-func (c *Clientset) Foo() foov1alpha.FooV1alphaInterface {
-	return &fakefoov1alpha.FakeFooV1alpha{Fake: &c.Fake}
+// Samplecontroller retrieves the SamplecontrollerV1alphaClient
+func (c *Clientset) Samplecontroller() samplecontrollerv1alpha.SamplecontrollerV1alphaInterface {
+	return &fakesamplecontrollerv1alpha.FakeSamplecontrollerV1alpha{Fake: &c.Fake}
 }

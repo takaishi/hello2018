@@ -19,7 +19,7 @@ limitations under the License.
 package versioned
 
 import (
-	foov1alpha "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha"
+	samplecontrollerv1alpha "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -27,27 +27,27 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	FooV1alpha() foov1alpha.FooV1alphaInterface
+	SamplecontrollerV1alpha() samplecontrollerv1alpha.SamplecontrollerV1alphaInterface
 	// Deprecated: please explicitly pick a version if possible.
-	Foo() foov1alpha.FooV1alphaInterface
+	Samplecontroller() samplecontrollerv1alpha.SamplecontrollerV1alphaInterface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	fooV1alpha *foov1alpha.FooV1alphaClient
+	samplecontrollerV1alpha *samplecontrollerv1alpha.SamplecontrollerV1alphaClient
 }
 
-// FooV1alpha retrieves the FooV1alphaClient
-func (c *Clientset) FooV1alpha() foov1alpha.FooV1alphaInterface {
-	return c.fooV1alpha
+// SamplecontrollerV1alpha retrieves the SamplecontrollerV1alphaClient
+func (c *Clientset) SamplecontrollerV1alpha() samplecontrollerv1alpha.SamplecontrollerV1alphaInterface {
+	return c.samplecontrollerV1alpha
 }
 
-// Deprecated: Foo retrieves the default version of FooClient.
+// Deprecated: Samplecontroller retrieves the default version of SamplecontrollerClient.
 // Please explicitly pick a version.
-func (c *Clientset) Foo() foov1alpha.FooV1alphaInterface {
-	return c.fooV1alpha
+func (c *Clientset) Samplecontroller() samplecontrollerv1alpha.SamplecontrollerV1alphaInterface {
+	return c.samplecontrollerV1alpha
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -66,7 +66,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.fooV1alpha, err = foov1alpha.NewForConfig(&configShallowCopy)
+	cs.samplecontrollerV1alpha, err = samplecontrollerv1alpha.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.fooV1alpha = foov1alpha.NewForConfigOrDie(c)
+	cs.samplecontrollerV1alpha = samplecontrollerv1alpha.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -91,7 +91,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.fooV1alpha = foov1alpha.New(c)
+	cs.samplecontrollerV1alpha = samplecontrollerv1alpha.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

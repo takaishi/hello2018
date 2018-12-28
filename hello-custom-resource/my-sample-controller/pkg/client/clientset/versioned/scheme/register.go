@@ -19,7 +19,7 @@ limitations under the License.
 package scheme
 
 import (
-	foov1alpha "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/apis/foo/v1alpha"
+	samplecontrollerv1alpha "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/apis/foo/v1alpha"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -31,7 +31,7 @@ var Scheme = runtime.NewScheme()
 var Codecs = serializer.NewCodecFactory(Scheme)
 var ParameterCodec = runtime.NewParameterCodec(Scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
-	foov1alpha.AddToScheme,
+	samplecontrollerv1alpha.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition
