@@ -109,6 +109,8 @@ Events:             <none>
 
 ## Custom Controller
 
+CRDだけではオブジェクトが作成されるだけで、何も起きないため、このオブジェクトを参照して何かするためのコントローラーを作らないといけない。
+
 * [KubernetesのCRD(Custom Resource Definition)とカスタムコントローラーの作成](https://qiita.com/__Attsun__/items/785008ef970ad82c679c)
 * [Extending Kubernetes with Custom Resources and Operator Frameworks](https://speakerdeck.com/ianlewis/extending-kubernetes-with-custom-resources-and-operator-frameworks)
   * Kubernetesを拡張するにはデータとロジックが必要
@@ -126,6 +128,7 @@ Events:             <none>
 ## sample-controllerを素朴に実装してみる
 
 * [kubernetes/code-generator](https://github.com/kubernetes/code-generator)
+* [Kubernetesを拡張しよう](https://www.ianlewis.org/jp/extending-kubernetes-ja)
 * [Extending Kubernetes: Create Controllers for Core and Custom Resources](https://medium.com/@trstringer/create-kubernetes-controllers-for-core-and-custom-resources-62fc35ad64a3)
   * コントローラのイベントフロー解説
 * [KubernetesのCustom Resource Definition(CRD)とCustom Controller](https://www.sambaiz.net/article/182/)
