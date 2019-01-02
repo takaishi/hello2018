@@ -1,24 +1,22 @@
 package main
 
 import (
+	clientset "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
+
+	"fmt"
 	"github.com/urfave/cli"
-	"k8s.io/client-go/tools/clientcmd"
 	"log"
 	"os"
+	"time"
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
+
 	app := cli.NewApp()
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "kubeconfig",
-			Value: "",
-		},
-		cli.StringFlag{
-			Name:  "masterURL",
-			Value: "",
-		},
-	}
+	app.Flags = []cli.Flag{}
 
 	app.Action = func(c *cli.Context) error {
 		return action(c)
@@ -31,10 +29,26 @@ func main() {
 }
 
 func action(c *cli.Context) error {
-	cfg, err := clientcmd.BuildConfigFromFlags(c.String("masterURL"), c.String("kubeconfig"))
+	log.Printf("START!")
+	cfg, err := rest.InClusterConfig()
 	if err != nil {
-		return err
+		log.Printf(err.Error())
 	}
-	log.Printf("%+v\n", cfg)
+	client, err := clientset.NewForConfig(cfg)
+	if err != nil {
+		log.Printf(err.Error())
+	}
+
+	for {
+		foos, err := client.SamplecontrollerV1alpha().Foos("default").List(v1.ListOptions{})
+		if err != nil {
+			log.Printf(err.Error())
+			continue
+		}
+
+		fmt.Printf("%+v\n", foos)
+
+		time.Sleep(10 * time.Second)
+	}
 	return nil
 }
