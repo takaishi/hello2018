@@ -133,6 +133,7 @@ CRDだけではオブジェクトが作成されるだけで、何も起きな�
   * コントローラのイベントフロー解説
 * [KubernetesのCustom Resource Definition(CRD)とCustom Controller](https://www.sambaiz.net/article/182/)
 * [Kubernetes Deep Dive: Code Generation for CustomResources](https://blog.openshift.com/kubernetes-deep-dive-code-generation-customresources/)
+* https://github.com/kubernetes/client-go/blob/master/examples/in-cluster-client-configuration/main.go
 
 
 
