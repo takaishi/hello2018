@@ -136,6 +136,8 @@ CRDだけではオブジェクトが作成されるだけで、何も起きな�
 
 
 
+`pkg/apis/foo`以下を作成した後、code-generatorでクライアント用コードを生成する：
+
 ```
 $ env GO111MODULE=off bash ~/src/k8s.io/code-generator/generate-groups.sh all github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/apis foo:v1alpha
 Generating deepcopy funcs
@@ -144,33 +146,129 @@ Generating listers for foo:v1alpha at github.com/takaishi/hello2018/hello-custom
 Generating informers for foo:v1alpha at github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/informers
 ```
 
+素朴にFooオブジェクトの一覧を取得して表示するだけのコントローラーを作成してみる：
 
+```Go
+package main
+
+import (
+	clientset "github.com/takaishi/hello2018/hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
+
+	"fmt"
+	"github.com/urfave/cli"
+	"log"
+	"os"
+	"time"
+)
+
+func main() {
+	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
+
+	app := cli.NewApp()
+	app.Flags = []cli.Flag{}
+
+	app.Action = func(c *cli.Context) error {
+		return action(c)
+	}
+
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func action(c *cli.Context) error {
+	log.Printf("START!")
+	cfg, err := rest.InClusterConfig()
+	if err != nil {
+		log.Printf(err.Error())
+	}
+	client, err := clientset.NewForConfig(cfg)
+	if err != nil {
+		log.Printf(err.Error())
+	}
+
+	for {
+		foos, err := client.SamplecontrollerV1alpha().Foos("default").List(v1.ListOptions{})
+		if err != nil {
+			log.Printf(err.Error())
+			continue
+		}
+
+		fmt.Printf("%+v\n", foos)
+
+		time.Sleep(10 * time.Second)
+	}
+	return nil
+}
+```
+
+コントローラー用のマニフェスト。defaultアカウントがオブジェクトを取得できるようにRBACの設定も行っている：
+
+```yaml
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: foo-reader
+  namespace: default
+rules:
+  - apiGroups: ["samplecontroller.k8s.io"]
+    verbs: ["get", "list"]
+    resources: ["foos"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: foo-reader-rolebinding
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: foo-reader
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-main
+spec:
+  selector:
+    matchLabels:
+      app: controller-main
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: controller-main
+    spec:
+      containers:
+        - name: controller-main
+          image: rtakaishi/sample-controller-main:latest
+          imagePullPolicy: IfNotPresent
+```
+
+
+
+デプロイ：
 
 ```
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/clientset.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/doc.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/fake/clientset_generated.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/fake/doc.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/fake/register.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/scheme/doc.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/scheme/register.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/doc.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/fake/doc.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/fake/fake_foo_client.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/foo_client.go
-? hello-custom-resource/my-sample-controller/pkg/client/clientset/versioned/typed/foo/v1alpha/generated_expansion.go
+$ cd my-sample-controller
+$ eval (minikube docker-env)
+$ make
 ```
 
-
+ログを見ると、取得したFooオブジェクトをプリントしていることが分かる：
 
 ```
-cd my-sample-controller
-env GO111MODULE=off OOS=linux GOARCH=amd64 go build -o controller-main main.go
-docker build . -t rtakaishi/sample-controller-main
-docker push rtakaishi/sample-controller-main:latest
+controller-main-665cbccb88-jm5l2 controller-main &{TypeMeta:{Kind: APIVersion:} ListMeta:{SelfLink:/apis/samplecontroller.k8s.io/v1alpha/namespaces/default/foos ResourceVersion:4155 Continue:} Items:[{TypeMeta:{Kind:Foo APIVersion:samplecontroller.k8s.io/v1alpha} ObjectMeta:{Name:foo-001 GenerateName: Namespace:default SelfLink:/apis/samplecontroller.k8s.io/v1alpha/namespaces/default/foos/foo-001 UID:77506f4f-0e40-11e9-95ac-263ada282756 ResourceVersion:3649 Generation:1 CreationTimestamp:2019-01-02 03:42:45 +0000 UTC DeletionTimestamp:<nil> DeletionGracePeriodSeconds:<nil> Labels:map[] Annotations:map[kubectl.kubernetes.io/last-applied-configuration:{"apiVersion":"samplecontroller.k8s.io/v1alpha","kind":"Foo","metadata":{"annotations":{},"name":"foo-001","namespace":"default"},
+"spec":{"deploymentName":"deploy-foo-001","replicas":1}}
 ```
-
-
 
 
 
