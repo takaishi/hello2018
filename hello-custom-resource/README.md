@@ -72,6 +72,7 @@ metadata:
 spec:
   deploymentName: deploy-foo-002
   replicas: 1
+  hoge: huga
 ```
 
 fooオブジェクトが生まれる：
@@ -101,6 +102,29 @@ Metadata:
   UID:                 77506f4f-0e40-11e9-95ac-263ada282756
 Spec:
   Deployment Name:  deploy-foo-001
+  Replicas:         1
+Events:             <none>
+```
+
+specはただのjsonなので、バリデーションを行わなければ自由にキーをバリューを設定可能なようだ：
+
+```
+$ kubectl describe foo foo-002
+Name:         foo-002
+Namespace:    default
+Labels:       <none>
+Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"samplecontroller.k8s.io/v1alpha","kind":"Foo","metadata":{"annotations":{},"name":"foo-002","namespace":"default"},"spec":{"deploymentNa...
+API Version:  samplecontroller.k8s.io/v1alpha
+Kind:         Foo
+Metadata:
+  Creation Timestamp:  2019-01-02T03:42:45Z
+  Generation:          1
+  Resource Version:    93582
+  Self Link:           /apis/samplecontroller.k8s.io/v1alpha/namespaces/default/foos/foo-002
+  UID:                 775194f8-0e40-11e9-95ac-263ada282756
+Spec:
+  Deployment Name:  deploy-foo-002
+  Hoge:             huga
   Replicas:         1
 Events:             <none>
 ```
