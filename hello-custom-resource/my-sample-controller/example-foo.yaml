@@ -1,0 +1,18 @@
+# https://github.com/kubernetes/sample-controller
+apiVersion: samplecontroller.k8s.io/v1alpha
+kind: Foo
+metadata:
+  name: foo-001
+spec:
+  deploymentName: deploy-foo-001
+  replicas: 1
+---
+apiVersion: samplecontroller.k8s.io/v1alpha
+kind: Foo
+metadata:
+  name: foo-002
+spec:
+  deploymentName: deploy-foo-002
+  replicas: 20
+  hoge: huga
+

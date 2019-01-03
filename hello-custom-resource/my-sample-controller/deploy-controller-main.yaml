@@ -1,0 +1,43 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: foo-reader
+  namespace: default
+rules:
+  - apiGroups: ["samplecontroller.k8s.io"]
+    verbs: ["get", "list"]
+    resources: ["foos"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: foo-reader-rolebinding
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: foo-reader
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-main
+spec:
+  selector:
+    matchLabels:
+      app: controller-main
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: controller-main
+    spec:
+      containers:
+        - name: controller-main
+          image: rtakaishi/sample-controller-main:latest
+          imagePullPolicy: IfNotPresent
