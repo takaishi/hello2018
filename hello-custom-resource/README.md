@@ -133,8 +133,9 @@ Events:             <none>
 
 ## Custom Controller
 
-CRDだけではオブジェクトが作成されるだけで、何も起きないため、このオブジェクトを参照して何かするためのコントローラーを作らないといけない。
+CRDだけではリソースを作成できるだけで何も起きない。データストアとして使うのであればCRDだけでよいが、KubernetesのdeclarativeAPIを活用する場合はコントローラーを作る必要がある。
 
+* [Custom Resources](https://v1-12.docs.kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
 * [KubernetesのCRD(Custom Resource Definition)とカスタムコントローラーの作成](https://qiita.com/__Attsun__/items/785008ef970ad82c679c)
 * [Extending Kubernetes with Custom Resources and Operator Frameworks](https://speakerdeck.com/ianlewis/extending-kubernetes-with-custom-resources-and-operator-frameworks)
   * Kubernetesを拡張するにはデータとロジックが必要
@@ -149,7 +150,11 @@ CRDだけではオブジェクトが作成されるだけで、何も起きな�
     * 名前とレプリカ数を指定できる
   * client-goライブラリを使っている
 
-## sample-controllerを素朴に実装してみる
+
+
+## カスタムコントローラー作っていく
+
+カスタムコントローラーを作っていくわけだが、いきなり複雑なものを作るのは難しい。まずはカスタムリソースを読み込み、ログに出力するだけのカスタムコントローラーを作ってみる。カスタムリソース作成用のSDKやBuilderがいろいろあるようだが、これもCRD用のコードを出力するためのcode-generatorを用いて素朴に実装してみたい。
 
 * [kubernetes/code-generator](https://github.com/kubernetes/code-generator)
 * [Kubernetesを拡張しよう](https://www.ianlewis.org/jp/extending-kubernetes-ja)
