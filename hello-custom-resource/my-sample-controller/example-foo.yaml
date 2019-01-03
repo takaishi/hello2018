@@ -13,4 +13,6 @@ metadata:
   name: foo-002
 spec:
   deploymentName: deploy-foo-002
-  replicas: 1
+  replicas: 20
+  hoge: huga
+
